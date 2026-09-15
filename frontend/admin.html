@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin PIN Configuration - Main Gate Security</title>
+  <meta name="description" content="Change Main Gate Authorization PIN securely">
+  <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+
+  <!-- Header Navigation -->
+  <header class="header-bar">
+    <div class="header-container">
+      <a href="/" class="brand-wrapper">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5zm0 4a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm5 12.1c-1.34 1.4-3.05 2.4-5 2.9-1.95-.5-3.66-1.5-5-2.9v-1.1c0-1.66 2.69-3 5-3s5 1.34 5 3v1.1z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Main Gate Security</h1>
+          <p>Admin PIN Management</p>
+        </div>
+      </a>
+      <nav class="nav-menu">
+        <a href="/" class="nav-link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <line x1="20" y1="8" x2="20" y2="14"></line>
+            <line x1="23" y1="11" x2="17" y2="11"></line>
+          </svg>
+          Authorize
+        </a>
+        <a href="/gate" class="nav-link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 11l3 3L22 4"></path>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+          Gate Verify
+        </a>
+        <a href="/history" class="nav-link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="12 8 12 12 14 14"></polyline>
+            <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
+          </svg>
+          Excel Records
+        </a>
+        <a href="/admin" class="nav-link active">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33-1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          Admin PIN
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-wrapper">
+    <div class="portal-card">
+      <h2 class="card-title">Change Authorization PIN</h2>
+      <p class="card-subtitle">Update the active entry authorization PIN. The current PIN must be verified before changes are applied.</p>
+
+      <form id="change-pin-form" autocomplete="off">
+        
+        <!-- Current PIN -->
+        <div class="form-section">
+          <label class="section-label" for="current-pin">Current PIN</label>
+          <div class="pin-wrapper">
+            <svg class="input-icon" style="left: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <input type="password" id="current-pin" class="pin-input" placeholder="••••" maxlength="8" required>
+          </div>
+        </div>
+
+        <!-- New PIN -->
+        <div class="form-section">
+          <label class="section-label" for="new-pin">New PIN (4 to 8 digits)</label>
+          <div class="pin-wrapper">
+            <svg class="input-icon" style="left: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 2l-2 2m-1.5 1.5L4 19l-2 3 3-2 13.5-13.5m-3-3l3 3"></path>
+            </svg>
+            <input type="password" id="new-pin" class="pin-input" placeholder="••••" maxlength="8" required pattern="\d{4,8}">
+          </div>
+        </div>
+
+        <!-- Confirm New PIN -->
+        <div class="form-section">
+          <label class="section-label" for="confirm-new-pin">Confirm New PIN</label>
+          <div class="pin-wrapper">
+            <svg class="input-icon" style="left: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <input type="password" id="confirm-new-pin" class="pin-input" placeholder="••••" maxlength="8" required pattern="\d{4,8}">
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn-authorize" id="btn-change-pin" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+          <span class="spinner" id="pin-spinner"></span>
+          <span class="btn-text" id="pin-btn-text">UPDATE AUTHORIZATION PIN</span>
+        </button>
+
+      </form>
+
+      <!-- Feedback Cards -->
+      <div class="result-card result-success" id="admin-success-card">
+        <div class="result-header">
+          <div class="result-icon-success">✓</div>
+          <div>
+            <div class="result-title">PIN UPDATED</div>
+            <div style="font-size: 13px; color: var(--text-secondary);" id="admin-success-text">Authorization PIN updated successfully.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-card result-danger" id="admin-danger-card">
+        <div class="result-header">
+          <div class="result-icon-danger">✕</div>
+          <div>
+            <div class="result-title">PIN CHANGE FAILED</div>
+            <div style="font-size: 13px; color: var(--rose-400);" id="admin-danger-text">Current PIN is incorrect.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- System Status Overview Card -->
+    <div class="portal-card" style="padding: 24px;">
+      <h3 style="font-family: 'Outfit', sans-serif; font-size: 16px; margin-bottom: 16px; color: #ffffff;">System Status Overview</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;" id="status-grid">
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+          <div style="color: var(--text-secondary); font-size: 12px;">Total Authorizations</div>
+          <div style="font-size: 20px; font-weight: 700; color: #ffffff;" id="stat-total">-</div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+          <div style="color: var(--text-secondary); font-size: 12px;">Email Notifications</div>
+          <div style="font-size: 14px; font-weight: 600;" id="stat-email">-</div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+          <div style="color: var(--text-secondary); font-size: 12px;">SMS Alerts</div>
+          <div style="font-size: 14px; font-weight: 600;" id="stat-sms">-</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer-bar">
+    Main Gate Security & Visitor Access Management System • Production Mode
+  </footer>
+
+  <script src="services/visitor.service.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

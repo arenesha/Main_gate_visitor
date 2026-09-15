@@ -1,0 +1,98 @@
+[
+  {
+    "id": "AUTH-1789307986783-39",
+    "pin": "5678",
+    "authorizedAt": "2026-09-13T13:59:46.783Z",
+    "visitors": [
+      {
+        "name": "Rahul Patil",
+        "used": true,
+        "usedAt": "2026-09-13T13:59:48.854Z"
+      },
+      {
+        "name": "Sneha Sharma",
+        "used": true,
+        "usedAt": "2026-09-13T13:59:52.972Z"
+      }
+    ]
+  },
+  {
+    "id": "AUTH-1789308396284-261",
+    "pin": "1234",
+    "authorizedAt": "2026-09-13T14:06:36.283Z",
+    "visitors": [
+      {
+        "name": "Priti",
+        "used": false,
+        "usedAt": null
+      }
+    ]
+  },
+  {
+    "id": "AUTH-1789309030871-568",
+    "pin": "1234",
+    "authorizedAt": "2026-09-13T14:17:10.871Z",
+    "visitors": [
+      {
+        "name": "Priti",
+        "used": false,
+        "usedAt": null
+      }
+    ]
+  },
+  {
+    "id": "AUTH-1789309053380-88",
+    "pin": "1234",
+    "authorizedAt": "2026-09-13T14:17:33.380Z",
+    "visitors": [
+      {
+        "name": "pppp",
+        "used": false,
+        "usedAt": null
+      }
+    ]
+  },
+  {
+    "id": "af82bdaf-2140-48bf-a22d-36fcdcc3cd8a",
+    "names": [
+      "priti"
+    ],
+    "pin": "1234",
+    "status": "AUTHORIZED",
+    "usedNames": [
+      "Priti"
+    ],
+    "createdAt": "2026-09-13T14:25:45.983Z"
+  },
+  {
+    "id": "fcd98baa-a9b6-4b16-97be-dc64e9f12a74",
+    "names": [
+      "Priti",
+      "Rahul"
+    ],
+    "pin": "1234",
+    "status": "AUTHORIZED",
+    "usedNames": [],
+    "createdAt": "2026-09-13T14:32:23.435Z"
+  },
+  {
+    "id": "5a70d17e-9aca-4a5c-8354-fff2ba3f3e62",
+    "names": [
+      "priti"
+    ],
+    "pin": "1234",
+    "status": "AUTHORIZED",
+    "usedNames": [],
+    "createdAt": "2026-09-13T14:33:51.298Z"
+  },
+  {
+    "id": "ab7cd1cf-60ff-40e0-953b-f1750cb5c958",
+    "names": [
+      "priti"
+    ],
+    "pin": "1234",
+    "status": "AUTHORIZED",
+    "usedNames": [],
+    "createdAt": "2026-09-13T14:49:51.757Z"
+  }
+]

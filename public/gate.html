@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gate Verification — Main Gate System</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="panel">
+  <p class="tag">MAIN GATE SECURITY</p>
+  <h1>Verify Visitor Entry</h1>
+  <p class="sub">Enter the visitor name exactly as received in the notification, plus the PIN. A successful match auto-logs the entry to Excel.</p>
+
+  <form id="verifyForm">
+    <label for="name">Visitor Name</label>
+    <input type="text" id="name" placeholder="e.g. Priti" required>
+
+    <label for="pin">Authorization PIN</label>
+    <input class="pin-input" type="password" id="pin" inputmode="numeric" maxlength="6" placeholder="••••" required>
+
+    <button type="submit" id="submitBtn">Verify Entry</button>
+  </form>
+
+  <div class="readout" id="readout"></div>
+
+  <div class="nav">
+    <a href="index.html">→ Host Terminal</a>
+    <a href="admin.html">→ Admin: Change PIN</a>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('verifyForm');
+const readout = document.getElementById('readout');
+const submitBtn = document.getElementById('submitBtn');
+
+function showReadout(text, cls) {
+  readout.textContent = text;
+  readout.className = 'readout show ' + cls;
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Verifying...';
+
+  const visitorName = document.getElementById('name').value.trim();
+  const pin = document.getElementById('pin').value.trim();
+
+  try {
+    const res = await fetch('/api/gate/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visitorName, pin })
+    });
+    const data = await res.json();
+
+    if (data.entryStatus === 'ENTRY AUTHORIZED') {
+      showReadout(`> RESULT: ENTRY AUTHORIZED\n> VISITOR: ${visitorName}\n> Logged to Excel record automatically.`, 'ok');
+      form.reset();
+    } else {
+      showReadout(`> RESULT: ENTRY NOT AUTHORIZED\n> VISITOR: ${visitorName}\n> No matching authorization or incorrect PIN.`, 'bad');
+    }
+  } catch (err) {
+    showReadout('> ERROR: Could not reach server. Is it running?', 'bad');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Verify Entry';
+  }
+});
+</script>
+</body>
+</html>

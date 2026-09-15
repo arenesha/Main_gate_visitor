@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visitor Authorization — Main Gate System</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="panel">
+  <p class="tag">HOST TERMINAL</p>
+  <h1>Authorize Visitor Entry</h1>
+  <p class="sub">Enter visitor name(s) and the authorization PIN. On success, Main Gate Security is notified automatically via email.</p>
+
+  <form id="authForm">
+    <label for="names">Visitor Name(s)</label>
+    <textarea id="names" placeholder="One name per line, e.g.&#10;Priti&#10;Rahul Patil" required></textarea>
+    <p class="hint">Multiple visitors: enter one name per line.</p>
+
+    <label for="pin">Authorization PIN</label>
+    <input class="pin-input" type="password" id="pin" inputmode="numeric" maxlength="6" placeholder="••••" required>
+
+    <button type="submit" id="submitBtn">AUTHORIZE ENTRY</button>
+  </form>
+
+  <div class="readout" id="readout"></div>
+
+  <div class="nav">
+    <a href="gate.html">→ Gate Verification</a>
+    <a href="admin.html">→ Admin: Change PIN</a>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('authForm');
+const readout = document.getElementById('readout');
+const submitBtn = document.getElementById('submitBtn');
+
+function showReadout(text, cls) {
+  readout.innerHTML = text;
+  readout.className = 'readout show ' + cls;
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Processing...';
+
+  const names = document.getElementById('names').value.split('\n').map(n => n.trim()).filter(Boolean);
+  const pin = document.getElementById('pin').value.trim();
+
+  try {
+    const res = await fetch('/api/visitor/authorize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ visitorNames: names, pin })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      let notifHtml = '';
+      if (data.emailSent) {
+        notifHtml = '<div style="color: #34d399; margin-top: 8px; font-weight: 600;">✓ Email notification sent to Main Gate Security</div>';
+      } else {
+        notifHtml = '<div style="color: #f87171; margin-top: 8px; font-weight: 600;">✗ Security email notification failed</div>';
+      }
+
+      showReadout(`> STATUS: ${data.authorizationStatus || 'AUTHORIZED'}\n> VISITORS: ${names.join(', ')}\n> ${data.message}${notifHtml}`, 'ok');
+      document.getElementById('pin').value = '';
+    } else {
+      showReadout(`> STATUS: ${data.authorizationStatus || 'NOT_AUTHORIZED'}\n> ${data.message || 'Invalid authorization PIN.'}`, 'bad');
+    }
+  } catch (err) {
+    showReadout('> ERROR: Could not reach server. Is it running?', 'bad');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'AUTHORIZE ENTRY';
+  }
+});
+</script>
+</body>
+</html>

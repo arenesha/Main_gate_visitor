@@ -1,0 +1,227 @@
+{
+  "current_pin": "123456",
+  "authorizations": [
+    {
+      "id": 1,
+      "visitor_names": [
+        "Rahul Sharma",
+        "Priya Patil"
+      ],
+      "pin": "1234",
+      "contact": "visitor@example.com",
+      "created_at": "2026-09-13T11:01:21.192619",
+      "authorization_status": "AUTHORIZED",
+      "completed": false,
+      "completed_at": null
+    },
+    {
+      "id": 2,
+      "visitor_names": [
+        "Rahul Sharma",
+        "Priya Patil"
+      ],
+      "pin": "1234",
+      "contact": "",
+      "created_at": "2026-09-13T11:01:21.205128",
+      "authorization_status": "AUTHORIZED",
+      "completed": true,
+      "completed_at": "2026-09-13T11:01:21.208529"
+    },
+    {
+      "id": 3,
+      "visitor_names": [
+        "Priti"
+      ],
+      "pin": "1234",
+      "contact": "8857908202",
+      "created_at": "2026-09-13T11:06:20.478521",
+      "authorization_status": "AUTHORIZED",
+      "completed": true,
+      "completed_at": "2026-09-13T11:06:33.455737"
+    },
+    {
+      "id": 4,
+      "visitor_names": [
+        "priti"
+      ],
+      "pin": "1234",
+      "contact": "8857908202",
+      "created_at": "2026-09-13T11:16:39.657056",
+      "authorization_status": "AUTHORIZED",
+      "completed": true,
+      "completed_at": "2026-09-13T11:17:00.264490"
+    },
+    {
+      "id": 5,
+      "visitor_names": [
+        "Priti"
+      ],
+      "pin": "1234",
+      "contact": "mekalepriti202001@gmail.com",
+      "created_at": "2026-09-13T11:17:51.146321",
+      "authorization_status": "AUTHORIZED",
+      "completed": true,
+      "completed_at": "2026-09-13T11:18:02.347887"
+    },
+    {
+      "id": 6,
+      "visitor_names": [
+        "Priti"
+      ],
+      "pin": "1234",
+      "contact": "mekalepriti202001@gmail.com",
+      "created_at": "2026-09-13T11:20:54.636604",
+      "authorization_status": "AUTHORIZED",
+      "completed": true,
+      "completed_at": "2026-09-13T11:21:08.653739"
+    },
+    {
+      "id": 7,
+      "visitor_names": [
+        "Priti"
+      ],
+      "pin": "1234",
+      "contact": "8857908202",
+      "created_at": "2026-09-13T11:43:29.022457",
+      "authorization_status": "AUTHORIZED",
+      "completed": true,
+      "completed_at": "2026-09-13T11:43:38.925857"
+    },
+    {
+      "id": 8,
+      "visitor_names": [
+        "Priti"
+      ],
+      "pin": "1234",
+      "contact": "8857908202",
+      "created_at": "2026-09-13T11:55:22.603513",
+      "authorization_status": "AUTHORIZED",
+      "completed": true,
+      "completed_at": "2026-09-13T11:55:32.486726"
+    },
+    {
+      "id": 9,
+      "visitors": [
+        {
+          "name": "Rahul Sharma",
+          "contact": "rahul@example.com"
+        },
+        {
+          "name": "Priya Patil",
+          "contact": "+918857908202"
+        }
+      ],
+      "visitor_names": [
+        "Rahul Sharma",
+        "Priya Patil"
+      ],
+      "pin": "1234",
+      "created_at": "2026-09-13T12:08:49.081103",
+      "authorization_status": "AUTHORIZED",
+      "completed": true,
+      "completed_at": "2026-09-13T12:08:49.086987"
+    },
+    {
+      "id": 10,
+      "visitors": [
+        {
+          "name": "Amit Kumar",
+          "contact": ""
+        }
+      ],
+      "visitor_names": [
+        "Amit Kumar"
+      ],
+      "pin": "5678",
+      "created_at": "2026-09-13T12:08:49.198926",
+      "authorization_status": "AUTHORIZED",
+      "completed": false,
+      "completed_at": null
+    },
+    {
+      "id": 11,
+      "visitors": [
+        {
+          "name": "priti",
+          "contact": "8857908202"
+        }
+      ],
+      "visitor_names": [
+        "priti"
+      ],
+      "pin": "1234",
+      "created_at": "2026-09-13T12:09:49.488691",
+      "authorization_status": "AUTHORIZED",
+      "completed": true,
+      "completed_at": "2026-09-13T12:09:59.781892"
+    },
+    {
+      "id": 12,
+      "visitors": [
+        {
+          "name": "ppppp",
+          "contact": "8857908202"
+        }
+      ],
+      "visitor_names": [
+        "ppppp"
+      ],
+      "pin": "1234",
+      "created_at": "2026-09-13T12:25:21.059363",
+      "authorization_status": "AUTHORIZED",
+      "completed": false,
+      "completed_at": null
+    },
+    {
+      "id": 13,
+      "visitors": [
+        {
+          "name": "Priti",
+          "contact": "8857908202"
+        }
+      ],
+      "visitor_names": [
+        "Priti"
+      ],
+      "pin": "123456",
+      "created_at": "2026-09-13T12:27:43.262881",
+      "authorization_status": "AUTHORIZED",
+      "completed": false,
+      "completed_at": null
+    },
+    {
+      "id": 14,
+      "visitors": [
+        {
+          "name": "Priti",
+          "contact": "8857908202"
+        }
+      ],
+      "visitor_names": [
+        "Priti"
+      ],
+      "pin": "123456",
+      "created_at": "2026-09-13T12:31:05.493996",
+      "authorization_status": "AUTHORIZED",
+      "completed": true,
+      "completed_at": "2026-09-13T12:31:23.110723"
+    },
+    {
+      "id": 15,
+      "visitors": [
+        {
+          "name": "Priti",
+          "contact": "mekalepriti202001@gmail.com"
+        }
+      ],
+      "visitor_names": [
+        "Priti"
+      ],
+      "pin": "123456",
+      "created_at": "2026-09-13T12:39:48.908017",
+      "authorization_status": "AUTHORIZED",
+      "completed": true,
+      "completed_at": "2026-09-13T12:39:59.626209"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+.env
+.env.*
+!.env.example
+*.env
+backend/.env
+
+# Python
+venv/
+**/venv/
+.venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.sqlite
+*.sqlite-journal
+*.db
+*.db-journal
+
+# Node / JS / Angular
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.angular/
+coverage/
+
+# Logs & OS
+*.log
+.DS_Store
+Thumbs.db
+

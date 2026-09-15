@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Authorize Visitor Entry — Gatekeeper{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Authorize Visitor Entry</h2>
+  <p>Issue access authorization for arriving visitors with security PIN verification.</p>
+</div>
+
+<div class="gate-card">
+  <form id="host-form" autocomplete="off">
+
+    <!-- Visitor Entries (One or more rows, each with Name + optional Contact) -->
+    <div class="form-group">
+      <label class="form-label">Visitor Entries</label>
+      <div id="visitor-list-container">
+        <div class="visitor-row" style="display: flex; flex-direction: column; gap: 0.5rem; background: rgba(30, 41, 59, 0.4); padding: 0.85rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.07); margin-bottom: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="visitor-row-label" style="font-size: 0.85rem; font-weight: 600; color: #94a3b8;">Visitor 1</span>
+            <button type="button" class="btn-remove-row" style="display: none; background: transparent; border: none; color: #ef4444; cursor: pointer;" title="Remove Visitor">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="input-wrapper">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <input 
+                type="text" 
+                class="form-control visitor-name-input" 
+                placeholder="Visitor Name (Required)" 
+                required 
+                autocomplete="off"
+              >
+            </div>
+            <div class="input-wrapper">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+              </svg>
+              <input 
+                type="text" 
+                class="form-control visitor-contact-input" 
+                placeholder="Personal email or phone (Optional)" 
+                autocomplete="off"
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" id="btn-add-visitor" class="btn-add-visitor">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        + Add Visitor
+      </button>
+    </div>
+
+    <!-- Authorization PIN -->
+    <div class="form-group">
+      <label for="auth-pin" class="form-label">Authorization PIN</label>
+      <div class="input-wrapper">
+        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <input 
+          type="password" 
+          id="auth-pin" 
+          class="form-control pin-input" 
+          placeholder="Enter 4-6 digit PIN" 
+          minlength="4"
+          maxlength="6"
+          pattern="[0-9]*"
+          inputmode="numeric"
+          required 
+          autocomplete="current-password"
+        >
+        <button type="button" id="btn-toggle-pin" class="btn-toggle-pin">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <button type="submit" id="btn-submit-auth" class="btn-submit">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      AUTHORIZE ENTRY
+    </button>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('visitor-list-container');
+    const addBtn = document.getElementById('btn-add-visitor');
+
+    function updateRowIndexes() {
+      const rows = container.querySelectorAll('.visitor-row');
+      rows.forEach((row, idx) => {
+        const lbl = row.querySelector('.visitor-row-label');
+        if (lbl) lbl.textContent = `Visitor ${idx + 1}`;
+        const rm = row.querySelector('.btn-remove-row');
+        if (rm) rm.style.display = rows.length > 1 ? 'block' : 'none';
+      });
+    }
+
+    function attachRemove(row) {
+      const rm = row.querySelector('.btn-remove-row');
+      if (rm) {
+        rm.onclick = () => {
+          row.remove();
+          updateRowIndexes();
+        };
+      }
+    }
+
+    attachRemove(container.querySelector('.visitor-row'));
+
+    addBtn.addEventListener('click', () => {
+      const rows = container.querySelectorAll('.visitor-row');
+      if (rows.length >= 10) {
+        showToast('Maximum of 10 visitors allowed per authorization.', 'error');
+        return;
+      }
+      const newIdx = rows.length + 1;
+      const row = document.createElement('div');
+      row.className = 'visitor-row';
+      row.style.cssText = 'display: flex; flex-direction: column; gap: 0.5rem; background: rgba(30, 41, 59, 0.4); padding: 0.85rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.07); margin-bottom: 0.75rem;';
+      row.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="visitor-row-label" style="font-size: 0.85rem; font-weight: 600; color: #94a3b8;">Visitor ${newIdx}</span>
+          <button type="button" class="btn-remove-row" style="background: transparent; border: none; color: #ef4444; cursor: pointer;" title="Remove Visitor">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <input type="text" class="form-control visitor-name-input" placeholder="Visitor Name (Required)" required autocomplete="off">
+          </div>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            </svg>
+            <input type="text" class="form-control visitor-contact-input" placeholder="Personal email or phone (Optional)" autocomplete="off">
+          </div>
+        </div>
+      `;
+      attachRemove(row);
+      container.appendChild(row);
+      updateRowIndexes();
+      row.querySelector('.visitor-name-input').focus();
+    });
+
+    setupPinToggle('btn-toggle-pin', 'auth-pin');
+
+    const form = document.getElementById('host-form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const rows = container.querySelectorAll('.visitor-row');
+      const visitors = [];
+
+      rows.forEach(r => {
+        const name = r.querySelector('.visitor-name-input').value.trim();
+        const contact = r.querySelector('.visitor-contact-input').value.trim();
+        if (name) {
+          visitors.push({ name, contact });
+        }
+      });
+
+      const pin = document.getElementById('auth-pin').value.trim();
+
+      if (visitors.length === 0) {
+        showToast('Please enter at least one visitor name.', 'error');
+        return;
+      }
+      if (!pin) {
+        showToast('Please enter the authorization PIN.', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/authorize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ visitors, pin })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          const names = data.visitor_names.join(', ');
+          showToast(`Visitor entry authorized for: ${names}`, 'success');
+          form.reset();
+          // Reset to 1 row
+          container.querySelectorAll('.visitor-row').forEach((r, idx) => {
+            if (idx > 0) r.remove();
+          });
+          updateRowIndexes();
+        } else {
+          showToast(data.message || 'Authorization failed. Incorrect PIN.', 'error');
+        }
+      } catch (err) {
+        showToast('Server error. Could not connect to Gatekeeper.', 'error');
+      }
+    });
+  });
+</script>
+{% endblock %}

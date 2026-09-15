@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — PIN Configuration</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="panel">
+  <p class="tag">ADMINISTRATOR</p>
+  <h1>Change Authorization PIN</h1>
+  <p class="sub">Only the administrator can update the PIN used for visitor authorization gate-wide.</p>
+
+  <form id="pinForm">
+    <label for="adminPassword">Admin Password</label>
+    <input type="password" id="adminPassword" required>
+
+    <label for="newPin">New Authorization PIN (4–6 digits)</label>
+    <input class="pin-input" type="password" id="newPin" inputmode="numeric" maxlength="6" placeholder="••••" required>
+
+    <button type="submit" id="submitBtn">Update PIN</button>
+  </form>
+
+  <div class="readout" id="readout"></div>
+
+  <div class="nav">
+    <a href="index.html">→ Host Terminal</a>
+    <a href="gate.html">→ Gate Verification</a>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('pinForm');
+const readout = document.getElementById('readout');
+const submitBtn = document.getElementById('submitBtn');
+
+function showReadout(text, cls) {
+  readout.textContent = text;
+  readout.className = 'readout show ' + cls;
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Updating...';
+
+  const adminPassword = document.getElementById('adminPassword').value;
+  const newPin = document.getElementById('newPin').value.trim();
+
+  try {
+    const res = await fetch('/api/admin/set-pin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminPassword, newPin })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showReadout(`> ${data.message}`, 'ok');
+      form.reset();
+    } else {
+      showReadout(`> ERROR: ${data.message}`, 'bad');
+    }
+  } catch (err) {
+    showReadout('> ERROR: Could not reach server. Is it running?', 'bad');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Update PIN';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Admin PIN Configuration — Gatekeeper{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Admin PIN Configuration</h2>
+  <p>Update the active system authorization PIN required for visitor entry.</p>
+</div>
+
+<div class="gate-card">
+  <form id="admin-form" autocomplete="off">
+
+    <!-- Current PIN -->
+    <div class="form-group">
+      <label for="current-pin" class="form-label">Current Authorization PIN</label>
+      <div class="input-wrapper">
+        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <input 
+          type="password" 
+          id="current-pin" 
+          class="form-control pin-input" 
+          placeholder="Enter Current PIN" 
+          required 
+          autocomplete="current-password"
+        >
+        <button type="button" id="btn-toggle-curr" class="btn-toggle-pin">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- New PIN -->
+    <div class="form-group">
+      <label for="new-pin" class="form-label">New Authorization PIN</label>
+      <div class="input-wrapper">
+        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+        </svg>
+        <input 
+          type="password" 
+          id="new-pin" 
+          class="form-control pin-input" 
+          placeholder="Enter New 4-6 Digit PIN" 
+          minlength="4"
+          maxlength="6"
+          pattern="[0-9]*"
+          inputmode="numeric"
+          required 
+          autocomplete="new-password"
+        >
+        <button type="button" id="btn-toggle-new" class="btn-toggle-pin">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Confirm New PIN -->
+    <div class="form-group">
+      <label for="confirm-pin" class="form-label">Confirm New Authorization PIN</label>
+      <div class="input-wrapper">
+        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <input 
+          type="password" 
+          id="confirm-pin" 
+          class="form-control pin-input" 
+          placeholder="Confirm New PIN" 
+          required 
+          autocomplete="new-password"
+        >
+        <button type="button" id="btn-toggle-conf" class="btn-toggle-pin">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <button type="submit" id="btn-submit-pin" class="btn-submit" style="background: linear-gradient(135deg, #7c3aed, #4f46e5);">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V7a5 5 0 00-10 0v4"></path>
+      </svg>
+      CHANGE PIN
+    </button>
+  </form>
+</div>
+
+<!-- LIVE EMAIL & SMS CONFIGURATION & TEST TOOL -->
+<div class="page-header" style="margin-top: 2.5rem;">
+  <h2>Live Email & SMS Setup & Testing</h2>
+  <p>Configure live credentials and send an instant test message to your personal mobile number or email.</p>
+</div>
+
+<div class="gate-card">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    <!-- Email Section -->
+    <div style="background: rgba(30, 41, 59, 0.4); padding: 1.25rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+      <h3 style="font-size: 1.1rem; color: #38bdf8; margin-bottom: 0.75rem;">1. Email (Gmail SMTP)</h3>
+      <div class="form-group" style="margin-bottom: 0.75rem;">
+        <label class="form-label" style="font-size: 0.8rem;">Gmail Address</label>
+        <input type="email" id="cfg-smtp-user" class="form-control" placeholder="yourname@gmail.com">
+      </div>
+      <div class="form-group" style="margin-bottom: 0.75rem;">
+        <label class="form-label" style="font-size: 0.8rem;">Google 16-Letter App Password</label>
+        <input type="password" id="cfg-smtp-pass" class="form-control" placeholder="e.g. abcd efgh ijkl mnop">
+      </div>
+      <div class="form-group" style="margin-bottom: 0.75rem;">
+        <label class="form-label" style="font-size: 0.8rem;">Security Alert Recipient Email</label>
+        <input type="email" id="cfg-sec-email" class="form-control" placeholder="security@yourcompany.com">
+      </div>
+    </div>
+
+    <!-- SMS Section -->
+    <div style="background: rgba(30, 41, 59, 0.4); padding: 1.25rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+      <h3 style="font-size: 1.1rem; color: #34d399; margin-bottom: 0.75rem;">2. SMS Gateway</h3>
+      <div class="form-group" style="margin-bottom: 0.75rem;">
+        <label class="form-label" style="font-size: 0.8rem;">Fast2SMS API Key (Recommended for India: 8857908202)</label>
+        <input type="text" id="cfg-fast2sms" class="form-control" placeholder="Paste Fast2SMS API Key">
+      </div>
+      <div style="text-align: center; font-size: 0.75rem; color: #94a3b8; margin: 0.5rem 0;">— OR TWILIO (INTERNATIONAL) —</div>
+      <div class="form-group" style="margin-bottom: 0.75rem;">
+        <label class="form-label" style="font-size: 0.8rem;">Twilio Account SID</label>
+        <input type="text" id="cfg-twilio-sid" class="form-control" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxx">
+      </div>
+      <div class="form-group" style="margin-bottom: 0.75rem;">
+        <label class="form-label" style="font-size: 0.8rem;">Twilio Auth Token</label>
+        <input type="password" id="cfg-twilio-token" class="form-control" placeholder="Twilio Auth Token">
+      </div>
+      <div class="form-group" style="margin-bottom: 0.75rem;">
+        <label class="form-label" style="font-size: 0.8rem;">Twilio From Phone Number</label>
+        <input type="text" id="cfg-twilio-from" class="form-control" placeholder="+1xxxxxxxxxx">
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 1.25rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <button type="button" id="btn-save-settings" class="btn-submit" style="flex: 1; background: linear-gradient(135deg, #059669, #10b981);">
+      SAVE CREDENTIALS
+    </button>
+  </div>
+
+  <!-- Instant Test Send Box -->
+  <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(15, 23, 42, 0.6); border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.2);">
+    <h4 style="color: #38bdf8; margin-bottom: 0.5rem; font-size: 0.95rem;">⚡ Instant Live Test Send</h4>
+    <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.75rem;">Enter your email or phone number to test real delivery right now:</p>
+    <div style="display: flex; gap: 0.75rem;">
+      <input type="text" id="test-recipient" class="form-control" placeholder="e.g. yourphone or yourname@gmail.com" style="flex: 1;">
+      <button type="button" id="btn-send-test" class="btn-submit" style="width: auto; padding: 0 1.5rem; background: #0284c7;">
+        SEND TEST NOW
+      </button>
+    </div>
+    <div id="test-result-box" style="margin-top: 0.75rem; padding: 0.75rem; border-radius: 6px; font-size: 0.85rem; display: none;"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    setupPinToggle('btn-toggle-curr', 'current-pin');
+    setupPinToggle('btn-toggle-new', 'new-pin');
+    setupPinToggle('btn-toggle-conf', 'confirm-pin');
+
+    // PIN Form
+    const form = document.getElementById('admin-form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const currentPin = document.getElementById('current-pin').value.trim();
+      const newPin = document.getElementById('new-pin').value.trim();
+      const confirmPin = document.getElementById('confirm-pin').value.trim();
+
+      if (!currentPin || !newPin || !confirmPin) {
+        showToast('Please fill in all PIN fields.', 'error');
+        return;
+      }
+      if (newPin !== confirmPin) {
+        showToast('New PIN and confirmation do not match.', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin/change-pin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ current_pin: currentPin, new_pin: newPin, confirm_new_pin: confirmPin })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          showToast('PIN updated successfully!', 'success');
+          form.reset();
+        } else {
+          showToast(data.message || 'Failed to update PIN. Check current PIN.', 'error');
+        }
+      } catch (err) {
+        showToast('Server error while updating PIN.', 'error');
+      }
+    });
+
+    // Save Settings
+    document.getElementById('btn-save-settings').addEventListener('click', async () => {
+      const emailUser = document.getElementById('cfg-smtp-user').value.trim();
+      const emailPass = document.getElementById('cfg-smtp-pass').value.trim();
+      const secEmail = document.getElementById('cfg-sec-email').value.trim();
+      const fast2sms = document.getElementById('cfg-fast2sms').value.trim();
+      const twilioSid = document.getElementById('cfg-twilio-sid').value.trim();
+      const twilioToken = document.getElementById('cfg-twilio-token').value.trim();
+      const twilioFrom = document.getElementById('cfg-twilio-from').value.trim();
+
+      const payload = {
+        SMTP_HOST: emailPass ? 'smtp.gmail.com' : undefined,
+        SMTP_PORT: '587',
+        SMTP_USERNAME: emailUser || undefined,
+        SMTP_PASSWORD: emailPass || undefined,
+        SMTP_FROM_EMAIL: emailUser || undefined,
+        SECURITY_EMAIL: secEmail || undefined,
+        FAST2SMS_API_KEY: fast2sms || undefined,
+        TWILIO_ACCOUNT_SID: twilioSid || undefined,
+        TWILIO_AUTH_TOKEN: twilioToken || undefined,
+        TWILIO_FROM_NUMBER: twilioFrom || undefined
+      };
+
+      // Filter out undefined
+      Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+
+      try {
+        const res = await fetch('/api/admin/save-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('✓ Credentials saved successfully to .env!', 'success');
+          alert('SUCCESS: Your email/SMS credentials have been saved! You can now send a test or authorize a visitor.');
+        } else {
+          showToast(data.message || 'Failed to save credentials.', 'error');
+          alert('ERROR: ' + (data.message || 'Failed to save credentials.'));
+        }
+      } catch (err) {
+        showToast('Server error saving credentials.', 'error');
+        alert('Server connection error while saving credentials.');
+      }
+    });
+
+    // Instant Test Send
+    document.getElementById('btn-send-test').addEventListener('click', async () => {
+      const recipient = document.getElementById('test-recipient').value.trim();
+      const resBox = document.getElementById('test-result-box');
+      if (!recipient) {
+        showToast('Please enter recipient email or phone.', 'error');
+        return;
+      }
+
+      resBox.style.display = 'block';
+      resBox.style.background = 'rgba(30, 41, 59, 0.8)';
+      resBox.style.color = '#94a3b8';
+      resBox.textContent = 'Sending live test message... please wait.';
+
+      try {
+        const res = await fetch('/api/admin/test-send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recipient })
+        });
+        const data = await res.json();
+        if (data.success) {
+          resBox.style.background = 'rgba(6, 78, 59, 0.5)';
+          resBox.style.color = '#6ee7b7';
+          resBox.style.border = '1px solid #10b981';
+          resBox.textContent = '✓ ' + data.message;
+          showToast('Test sent: ' + data.message, 'success');
+        } else {
+          resBox.style.background = 'rgba(127, 29, 29, 0.5)';
+          resBox.style.color = '#fca5a5';
+          resBox.style.border = '1px solid #ef4444';
+          resBox.textContent = '✗ ' + data.message;
+          showToast('Delivery failed: ' + data.message, 'error');
+        }
+      } catch (err) {
+        resBox.style.background = 'rgba(127, 29, 29, 0.5)';
+        resBox.style.color = '#fca5a5';
+        resBox.textContent = '✗ Connection error testing delivery.';
+      }
+    });
+  });
+</script>
+{% endblock %}
