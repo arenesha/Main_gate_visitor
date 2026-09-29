@@ -1,4 +1,20 @@
+import fs from 'fs';
+import path from 'path';
 import nodemailer from 'nodemailer';
+
+// Auto-load .env if present
+try {
+  const envPath = path.resolve(process.cwd(), '.env');
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    envContent.split(/\r?\n/).forEach(line => {
+      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+      if (match && !process.env[match[1]]) {
+        process.env[match[1]] = match[2].trim().replace(/^['"]|['"]$/g, '');
+      }
+    });
+  }
+} catch (e) {}
 
 const SMTP_CONFIG = {
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -6,7 +22,7 @@ const SMTP_CONFIG = {
   secure: false,
   auth: {
     user: process.env.SMTP_USER || 'arenesha.reception@gmail.com',
-    pass: process.env.SMTP_PASS || ''
+    pass: process.env.SMTP_PASS || process.env.SMTP_PASSWORD
   }
 };
 
