@@ -722,6 +722,26 @@ export default {
         const newUsedCount = (inv.entries_used || 0) + 1;
         const finalStatus = (newUsedCount >= inv.max_entries && inv.entry_type === 'SINGLE') ? 'USED' : 'ACTIVE';
 
+        // Dispatch real-time security alert to arenesha20@gmail.com on visitor check-in
+        try {
+          fetch('http://127.0.0.1:8005/api/dispatch-security-alert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: inv.id,
+              visitor_name: inv.visitor_name,
+              visitor_phone: inv.visitor_phone,
+              visitor_email: inv.visitor_email,
+              purpose: inv.purpose,
+              host_name: inv.host_name,
+              entry_code: inv.entry_code,
+              vehicle_number: inv.vehicle_number,
+              verified_by: guardLabel,
+              event_type: 'ENTRY_ALLOWED'
+            })
+          }).catch(() => {});
+        } catch (e) {}
+
         return jsonResponse({
           success: true,
           authorized: true,
@@ -918,6 +938,25 @@ export default {
           const smsResult = await sendTwilioSMS(env, visitor_phone, smsText);
           notificationStatus.sms = smsResult;
         }
+
+        // Dispatch real-time security alert to arenesha20@gmail.com on visitor pass creation
+        try {
+          fetch('http://127.0.0.1:8005/api/dispatch-security-alert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id,
+              visitor_name,
+              visitor_phone,
+              visitor_email,
+              purpose,
+              host_name,
+              entry_code,
+              vehicle_number,
+              event_type: 'INVITATION_CREATED'
+            })
+          }).catch(() => {});
+        } catch (e) {}
 
         return jsonResponse({
           success: true,

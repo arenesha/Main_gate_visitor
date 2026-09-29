@@ -350,3 +350,133 @@ export async function sendGuardActivationEmail(guardData) {
     return { success: false, error: err.message };
   }
 }
+
+/**
+ * Sends real-time Guard/Security Alert email to arenesha20@gmail.com whenever a visitor visits
+ */
+export async function sendSecurityVisitorAlertEmail(data) {
+  const {
+    id = 'INV-UNKNOWN',
+    visitor_name = 'Visitor',
+    visitor_phone = 'N/A',
+    visitor_email = 'N/A',
+    purpose = 'General Visit',
+    host_name = 'AreneSHA Workspace',
+    entry_code = 'N/A',
+    vehicle_number = 'None',
+    event_type = 'ENTRY_ALLOWED', // 'ENTRY_ALLOWED' or 'INVITATION_CREATED'
+    verified_by = 'Main Gate Security Officer',
+    time = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
+  } = data || {};
+
+  const securityRecipient = process.env.SECURITY_EMAIL || process.env.GUARD_EMAIL || 'arenesha20@gmail.com';
+  const senderEmail = process.env.SMTP_USER || 'arenesha.reception@gmail.com';
+
+  const isEntry = event_type === 'ENTRY_ALLOWED';
+  const badgeColor = isEntry ? '#16A34A' : '#2563EB';
+  const title = isEntry ? 'VISITOR GATE CHECK-IN COMPLETED' : 'NEW VISITOR AUTHORIZATION SCHEDULED';
+  const subject = isEntry
+    ? `🔔 [GATE ALERT] Visitor Checked In: ${visitor_name} • Pass ${id}`
+    : `📋 [GATE ALERT] New Visitor Scheduled: ${visitor_name} • PIN ${entry_code}`;
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>${subject}</title>
+    </head>
+    <body style="margin: 0; padding: 18px 8px; background-color: #0F172A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+      
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 480px; margin: 0 auto; background-color: #1E293B; border-radius: 16px; overflow: hidden; border: 1.5px solid #334155; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+        
+        <!-- HEADER -->
+        <tr>
+          <td align="center" style="padding: 22px 20px 16px 20px; background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%); border-bottom: 1px solid #334155;">
+            <div style="font-size: 11px; font-weight: 800; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px;">
+              🏢 AreneSHA Intelligent Security Checkpoint
+            </div>
+            <div style="display: inline-block; background-color: ${badgeColor}; color: #FFFFFF; font-size: 11.5px; font-weight: 800; padding: 4px 14px; border-radius: 9999px; letter-spacing: 0.05em;">
+              ${title}
+            </div>
+          </td>
+        </tr>
+
+        <!-- DETAILS CARD -->
+        <tr>
+          <td style="padding: 20px 22px;">
+            <div style="font-size: 15px; color: #E2E8F0; font-weight: 700; margin-bottom: 14px;">
+              Security Notice for Guard (${securityRecipient}):
+            </div>
+
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #0F172A; border-radius: 12px; border: 1px solid #334155; margin-bottom: 18px;">
+              <tr>
+                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #94A3B8; font-size: 13px; width: 38%;"><strong>Visitor Name:</strong></td>
+                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #F8FAFC; font-size: 13.5px; font-weight: 700;">${visitor_name}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #94A3B8; font-size: 13px;"><strong>Pass ID:</strong></td>
+                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #38BDF8; font-family: monospace; font-size: 14px; font-weight: 700;">${id}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #94A3B8; font-size: 13px;"><strong>Entry PIN:</strong></td>
+                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #F59E0B; font-family: monospace; font-size: 15px; font-weight: 800;">${entry_code}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #94A3B8; font-size: 13px;"><strong>Purpose:</strong></td>
+                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #F8FAFC; font-size: 13px;">${purpose}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #94A3B8; font-size: 13px;"><strong>Host:</strong></td>
+                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #CBD5E1; font-size: 13px;">${host_name}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #94A3B8; font-size: 13px;"><strong>Vehicle:</strong></td>
+                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #CBD5E1; font-size: 13px;">${vehicle_number || 'None'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 14px; color: #94A3B8; font-size: 13px;"><strong>Time:</strong></td>
+                <td style="padding: 10px 14px; color: #CBD5E1; font-size: 12.5px;">${time}</td>
+              </tr>
+            </table>
+
+            <div align="center" style="margin: 16px 0 10px 0;">
+              <a href="http://localhost:5173/gate" target="_blank" style="background-color: #2563EB; color: #FFFFFF; font-size: 13px; font-weight: 700; text-decoration: none; padding: 10px 24px; border-radius: 8px; display: inline-block;">
+                OPEN GUARD SECURITY PORTAL
+              </a>
+            </div>
+          </td>
+        </tr>
+
+        <!-- FOOTER -->
+        <tr>
+          <td align="center" style="padding: 12px 20px; background-color: #0F172A; border-top: 1px solid #334155; color: #64748B; font-size: 11px;">
+            AreneSHA Security Systems • Automated Dispatch to ${securityRecipient}
+          </td>
+        </tr>
+
+      </table>
+
+    </body>
+    </html>
+  `;
+
+  const plainText = `[GATE SECURITY ALERT]\n${title}\n\nVisitor: ${visitor_name}\nPass ID: ${id}\nPIN: ${entry_code}\nPurpose: ${purpose}\nHost: ${host_name}\nVehicle: ${vehicle_number || 'None'}\nTime: ${time}\n\nAutomated Security Dispatch to ${securityRecipient}`;
+
+  try {
+    const mailOptions = {
+      from: `"AreneSHA Security Alert" <${senderEmail}>`,
+      to: securityRecipient,
+      subject,
+      html: htmlContent,
+      text: plainText
+    };
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[Email Dispatch] Security visitor alert email sent to ${securityRecipient} (MsgID: ${info.messageId})`);
+    return { success: true, messageId: info.messageId, recipient: securityRecipient };
+  } catch (err) {
+    console.error('[Email Dispatch Error - Security Visitor Alert]', err);
+    return { success: false, error: err.message };
+  }
+}
+
