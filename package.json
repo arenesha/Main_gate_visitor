@@ -1,23 +1,27 @@
 {
   "name": "main-gate-visitor-authorization-system",
-  "version": "1.0.0",
-  "main": "server.js",
+  "version": "2.0.0",
+  "description": "Cloudflare Worker + D1 + React Main Gate Visitor Authorization & Security Checkpoint System",
+  "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "concurrently -n \"BACKEND,NOTIFY,FRONTEND\" -c \"blue,magenta,green\" \"npm run dev:backend\" \"npm run dev:notify\" \"npm run dev:frontend\"",
+    "dev": "npm start",
+    "dev:backend": "wrangler dev --port 8788",
+    "dev:notify": "node src/notifyServer.js",
+    "dev:frontend": "npm run --prefix frontend dev",
+    "build:frontend": "npm run --prefix frontend build",
+    "preview": "npm run --prefix frontend preview",
+    "deploy": "npm run build:frontend && wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply visitor-invitation-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply visitor-invitation-db --remote",
+    "test": "node test-e2e.js"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5",
+    "wrangler": "^3.107.0 || ^4.0.0"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "body-parser": "^1.20.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "exceljs": "^4.4.0",
-    "express": "^4.19.2",
-    "express-rate-limit": "^8.7.0",
-    "helmet": "^8.3.0",
-    "nodemailer": "^6.9.14",
-    "sqlite3": "^6.0.1",
-    "twilio": "^5.2.2",
-    "uuid": "^9.0.1"
+    "nodemailer": "^10.0.10",
+    "qrcode": "^1.5.4"
   }
 }

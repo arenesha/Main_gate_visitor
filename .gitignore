@@ -27,7 +27,10 @@ dist/
 coverage/
 
 # Logs & OS
-*.log
-.DS_Store
-Thumbs.db
+# Cloudflare Wrangler & Temp
+.wrangler/
+.wrangler/tmp/
+.cache/
+.vite/
+scratch/
 
