@@ -14,7 +14,8 @@ export default function PublicInvitationPass() {
   useEffect(() => {
     async function fetchPass() {
       try {
-        setLoading(false);
+        setLoading(true);
+        setError(null);
         const res = await fetch(`/api/invitations/${id}/public`);
         const data = await res.json();
         if (!res.ok || !data.success) {
