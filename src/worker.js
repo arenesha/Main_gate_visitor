@@ -499,7 +499,7 @@ export default {
               const segments = urlObj.pathname.split('/');
               possibleId = segments[segments.length - 1];
             }
-          } catch (e) {}
+          } catch (e) { }
 
           inv = await db.prepare('SELECT * FROM invitations WHERE qr_token = ?').bind(tokenToMatch).first();
           if (!inv && possibleId) {
@@ -739,8 +739,8 @@ export default {
               verified_by: guardLabel,
               event_type: 'ENTRY_ALLOWED'
             })
-          }).catch(() => {});
-        } catch (e) {}
+          }).catch(() => { });
+        } catch (e) { }
 
         return jsonResponse({
           success: true,
@@ -955,8 +955,8 @@ export default {
               vehicle_number,
               event_type: 'INVITATION_CREATED'
             })
-          }).catch(() => {});
-        } catch (e) {}
+          }).catch(() => { });
+        } catch (e) { }
 
         return jsonResponse({
           success: true,
@@ -1139,8 +1139,8 @@ export default {
       const deleteMatch = path.match(/^\/api\/invitations\/([A-Za-z0-9_-]+)$/);
       if (deleteMatch && request.method === 'DELETE') {
         const id = deleteMatch[1];
-        try { await db.prepare('DELETE FROM gate_verifications WHERE invitation_id = ?').bind(id).run(); } catch (e) {}
-        try { await db.prepare('DELETE FROM invitations WHERE id = ?').bind(id).run(); } catch (e) {}
+        try { await db.prepare('DELETE FROM gate_verifications WHERE invitation_id = ?').bind(id).run(); } catch (e) { }
+        try { await db.prepare('DELETE FROM invitations WHERE id = ?').bind(id).run(); } catch (e) { }
 
         return jsonResponse({
           success: true,
@@ -1296,7 +1296,7 @@ export default {
             const segments = urlObj.pathname.split('/');
             possibleId = segments[segments.length - 1];
           }
-        } catch (e) {}
+        } catch (e) { }
 
         let inv = await db.prepare('SELECT * FROM invitations WHERE qr_token = ?').bind(tokenToMatch).first();
         if (!inv && possibleId) {
@@ -1497,10 +1497,10 @@ export default {
 
       // 3.13 Clear Data (POST /api/admin/clear-all-data)
       if (path === '/api/admin/clear-all-data' && request.method === 'POST') {
-        try { await db.prepare('DELETE FROM gate_verifications').run(); } catch (e) {}
-        try { await db.prepare('DELETE FROM guard_activation_logs').run(); } catch (e) {}
-        try { await db.prepare('DELETE FROM email_logs').run(); } catch (e) {}
-        try { await db.prepare('DELETE FROM invitations').run(); } catch (e) {}
+        try { await db.prepare('DELETE FROM gate_verifications').run(); } catch (e) { }
+        try { await db.prepare('DELETE FROM guard_activation_logs').run(); } catch (e) { }
+        try { await db.prepare('DELETE FROM email_logs').run(); } catch (e) { }
+        try { await db.prepare('DELETE FROM invitations').run(); } catch (e) { }
         return jsonResponse({
           success: true,
           message: 'All previous invitations, gate verifications, and email logs have been deleted successfully.'
