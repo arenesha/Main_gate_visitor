@@ -2,7 +2,10 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+  base: '/Main_gate_visitor/',
+
   plugins: [react()],
+
   server: {
     port: 5173,
     proxy: {
@@ -16,6 +19,7 @@ export default defineConfig({
       }
     }
   },
+
   build: {
     outDir: 'dist',
     emptyOutDir: true
