@@ -67,7 +67,7 @@ async function dispatchGuardActivationEmail(db, guardUser, origin, env) {
   try {
     const logId = `LOG-ACT-${generateRandomAlphanumeric(8)}`;
     const nowIso = new Date().toISOString();
-    const gateUrl = 'http://localhost:8788/gate';
+    const gateUrl = (origin && !origin.includes('8788')) ? `${origin}/gate` : 'http://localhost:5173/gate';
 
     const payload = {
       name: 'AreneSHA Guard',

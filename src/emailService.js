@@ -216,7 +216,7 @@ export async function sendGuardActivationEmail(guardData) {
     name = 'AreneSHA Guard',
     email = 'arenesha20@gmail.com',
     location = 'B-Block, MEENAKSHI TECH PARK, 11th, Gachibowli, Hyderabad, Telangana 500032',
-    gate_url = 'http://localhost:8788/gate'
+    gate_url = 'http://localhost:5173/gate'
   } = guardData || {};
 
   const senderEmail = process.env.SMTP_USER || 'arenesha.reception@gmail.com';
