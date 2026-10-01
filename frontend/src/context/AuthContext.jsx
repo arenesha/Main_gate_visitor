@@ -12,8 +12,7 @@ export function AuthProvider({ children }) {
     async function checkAuth() {
       const savedToken = localStorage.getItem('gate_auth_token');
       if (!savedToken) {
-        // Auto-login as default Guard arenesha20@gmail.com if no session exists
-        await login('arenesha20@gmail.com', 'Guard@AreneSHA2026');
+        setUser(null);
         setLoading(false);
         return;
       }
@@ -31,15 +30,18 @@ export function AuthProvider({ children }) {
             setUser(data.user);
             setToken(savedToken);
           } else {
-            // Expired -> re-login
-            await login('arenesha20@gmail.com', 'Guard@AreneSHA2026');
+            localStorage.removeItem('gate_auth_token');
+            setUser(null);
+            setToken(null);
           }
         } else {
-          // Token invalid or expired -> re-login default guard
-          await login('arenesha20@gmail.com', 'Guard@AreneSHA2026');
+          localStorage.removeItem('gate_auth_token');
+          setUser(null);
+          setToken(null);
         }
       } catch (err) {
         console.warn('Auth check error:', err);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -48,7 +50,7 @@ export function AuthProvider({ children }) {
     checkAuth();
   }, []);
 
-  const login = async (email, password = 'Guard@AreneSHA2026') => {
+  const login = async (email = 'arenesha20@gmail.com', password = 'Arenesha@777') => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',

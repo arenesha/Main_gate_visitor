@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, UserPlus, Users, ShieldAlert, History, Building2, CreditCard, BarChart3, Calendar } from 'lucide-react';
+import { LayoutDashboard, UserPlus, Users, ShieldAlert, History, Building2, CreditCard, BarChart3, Calendar, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Sidebar() {
@@ -24,7 +24,7 @@ export default function Sidebar() {
       {/* Navigation Links */}
       <div className="sidebar-nav">
         <NavLink 
-          to="/" 
+          to="/admin/dashboard" 
           end
           className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
         >
@@ -33,12 +33,12 @@ export default function Sidebar() {
         </NavLink>
 
         <NavLink 
-          to="/booking" 
+          to="/" 
           end
           className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
         >
-          <CreditCard size={18} />
-          <span>Student Booking</span>
+          <Sparkles size={18} color="#B6FF1B" />
+          <span>Meet Robo Summit</span>
         </NavLink>
 
         <NavLink 
