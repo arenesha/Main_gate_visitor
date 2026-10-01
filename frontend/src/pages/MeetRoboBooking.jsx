@@ -256,13 +256,15 @@ export default function MeetRoboBooking() {
   const handleCloseModal = () => {
     setConfirmedBooking(null);
     setShowSlots(true);
-    const targetUrl = window.location.host.includes('8788')
-      ? `${window.location.protocol}//${window.location.host}/booking`
-      : (window.location.host.includes('5173') ? `${window.location.protocol}//${window.location.host}/booking` : 'http://127.0.0.1:8788/booking');
-    window.location.href = targetUrl;
+    if (location.pathname !== '/booking') {
+      navigate('/booking');
+    }
+    setTimeout(() => {
+      slotSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
   };
 
-  // Direct download gate pass and redirect to booking page
+  // Direct download gate pass and dynamically redirect to booking page
   const handleDownloadAndRedirect = () => {
     if (!confirmedBooking) return;
     setDownloadingPass(true);
@@ -302,11 +304,17 @@ Issued At: ${new Date().toLocaleString()}
       setConfirmedBooking(null);
       setDownloadingPass(false);
       setShowSlots(true);
-      const targetUrl = window.location.host.includes('8788')
-        ? `${window.location.protocol}//${window.location.host}/booking`
-        : (window.location.host.includes('5173') ? `${window.location.protocol}//${window.location.host}/booking` : 'http://127.0.0.1:8788/booking');
-      window.location.href = targetUrl;
-    }, 1200);
+      fetchSlots(selectedDate);
+      // Dynamic routing to /booking without any hardcoded host, port, or protocol
+      if (location.pathname !== '/booking') {
+        navigate('/booking');
+      } else {
+        window.location.href = '/booking';
+      }
+      setTimeout(() => {
+        slotSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    }, 1000);
   };
 
   // Manual payment reference confirmation
