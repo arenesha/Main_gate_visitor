@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Shield, Lock, Mail, AlertCircle, CheckCircle2, X, ArrowRight, KeyRound } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Shield, Lock, Mail, AlertCircle, CheckCircle2, X, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,10 +7,18 @@ export default function LoginModal({ isOpen, onClose, targetRoute = '/admin/dash
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('arenesha20@gmail.com');
-  const [password, setPassword] = useState('Arenesha@777');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setEmail('');
+      setPassword('');
+      setError(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -32,11 +40,6 @@ export default function LoginModal({ isOpen, onClose, targetRoute = '/admin/dash
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickFill = () => {
-    setEmail('arenesha20@gmail.com');
-    setPassword('Arenesha@777');
   };
 
   return (
@@ -143,7 +146,7 @@ export default function LoginModal({ isOpen, onClose, targetRoute = '/admin/dash
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="arenesha20@gmail.com"
+                placeholder="Enter your email or username"
                 required
                 style={{
                   width: '100%',
@@ -160,7 +163,7 @@ export default function LoginModal({ isOpen, onClose, targetRoute = '/admin/dash
             </div>
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '24px' }}>
             <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Password
             </label>
@@ -170,7 +173,7 @@ export default function LoginModal({ isOpen, onClose, targetRoute = '/admin/dash
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Arenesha@777"
+                placeholder="Enter password"
                 required
                 style={{
                   width: '100%',
@@ -185,38 +188,6 @@ export default function LoginModal({ isOpen, onClose, targetRoute = '/admin/dash
                 }}
               />
             </div>
-          </div>
-
-          {/* Quick Credential Helper Pill */}
-          <div style={{
-            background: 'rgba(56, 189, 248, 0.1)',
-            border: '1px solid rgba(56, 189, 248, 0.25)',
-            borderRadius: '10px',
-            padding: '8px 12px',
-            marginBottom: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '0.76rem'
-          }}>
-            <div style={{ color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <KeyRound size={13} />
-              <span>Login: <strong>arenesha20@gmail.com</strong></span>
-            </div>
-            <button
-              type="button"
-              onClick={handleQuickFill}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#67E8F9',
-                cursor: 'pointer',
-                fontWeight: 700,
-                textDecoration: 'underline'
-              }}
-            >
-              Fill
-            </button>
           </div>
 
           <button
