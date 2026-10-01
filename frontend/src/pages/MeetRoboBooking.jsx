@@ -19,6 +19,8 @@ export default function MeetRoboBooking() {
   const slotSectionRef = useRef(null);
 
   const isDirectBooking = location.pathname === '/booking' || location.search.includes('signup=true');
+  const [showSlots, setShowSlots] = useState(isDirectBooking || location.pathname === '/booking');
+  const [lastConfirmedMessage, setLastConfirmedMessage] = useState(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   useEffect(() => {
@@ -29,11 +31,7 @@ export default function MeetRoboBooking() {
     }
   }, [isDirectBooking]);
 
-  const [selectedDate, setSelectedDate] = useState(() => {
-    // Event date is Fri 2 Oct 2026 or today
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  });
+  const [selectedDate, setSelectedDate] = useState('2026-10-02');
 
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +43,7 @@ export default function MeetRoboBooking() {
   const [studentEmail, setStudentEmail] = useState('');
   const [studentPhone, setStudentPhone] = useState('');
   const [collegeName, setCollegeName] = useState('');
+  const [formErrors, setFormErrors] = useState({});
 
   // Payment states
   const [processingPayment, setProcessingPayment] = useState(false);
@@ -148,28 +147,60 @@ export default function MeetRoboBooking() {
     setShowSlots(true);
   };
 
-  // Handle Checkout initiation
-  const handleInitiatePayment = async (e) => {
-    e.preventDefault();
+  // Validate Registration Form Fields
+  const validateForm = () => {
+    const errors = {};
 
-    let currentSlotIds = selectedSlotIds;
-    if (currentSlotIds.length === 0) {
-      const firstAvailable = slots.find(s => !s.is_full && s.booked_count < s.max_capacity);
-      if (firstAvailable) {
-        currentSlotIds = [firstAvailable.id];
-        setSelectedSlotIds([firstAvailable.id]);
-      } else {
-        setPaymentError('All slots are currently booked for this date. Please pick another date.');
-        return;
+    // 1. Slot Selection
+    if (selectedSlotIds.length === 0) {
+      errors.slot = 'Please select at least one available session slot from the grid.';
+    }
+
+    // 2. Full Name
+    const trimmedName = studentName.trim();
+    if (!trimmedName) {
+      errors.name = 'Full name is required.';
+    } else if (trimmedName.length < 2) {
+      errors.name = 'Full name must be at least 2 characters.';
+    } else if (!/^[a-zA-Z\s.'-]+$/.test(trimmedName)) {
+      errors.name = 'Name should only contain letters and spaces.';
+    }
+
+    // 3. Email Address
+    const trimmedEmail = studentEmail.trim();
+    if (!trimmedEmail) {
+      errors.email = 'Email address is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      errors.email = 'Please enter a valid email address (e.g. rahul@gmail.com).';
+    }
+
+    // 4. Mobile Phone (10 digits)
+    const trimmedPhone = studentPhone.trim();
+    if (!trimmedPhone) {
+      errors.phone = 'Mobile number is required.';
+    } else {
+      const cleanDigits = trimmedPhone.replace(/^(\+91|91|0)/, '').replace(/\D/g, '');
+      if (cleanDigits.length !== 10 || !/^[6-9]\d{9}$/.test(cleanDigits)) {
+        errors.phone = 'Please enter a valid 10-digit mobile number (e.g. 9876543210).';
       }
     }
 
-    if (!studentName.trim()) {
-      setPaymentError('Please enter your full name.');
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle direct slot booking confirmation with validation
+  const handleConfirmBooking = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      setPaymentError('Please correct the highlighted form errors before confirming.');
       return;
     }
-    if (!studentEmail.trim()) {
-      setPaymentError('Please enter a valid email address.');
+
+    let currentSlotIds = selectedSlotIds;
+    if (currentSlotIds.length === 0) {
+      setPaymentError('Please select at least one session slot.');
       return;
     }
 
@@ -178,13 +209,14 @@ export default function MeetRoboBooking() {
     setPaymentCancelled(false);
 
     try {
-      const orderRes = await fetch('/api/booking/create-order', {
+      const cleanPhone = studentPhone.trim().replace(/^(\+91|91|0)/, '').replace(/\D/g, '');
+      const res = await fetch('/api/booking/confirm-direct', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           student_name: studentName.trim(),
           student_email: studentEmail.trim().toLowerCase(),
-          student_phone: studentPhone.trim() || null,
+          student_phone: cleanPhone || studentPhone.trim(),
           slot_ids: currentSlotIds,
           date: selectedDate,
           slot_date: selectedDate,
@@ -192,45 +224,43 @@ export default function MeetRoboBooking() {
         })
       });
 
-      const orderData = await orderRes.json();
-      if (!orderData.success) {
-        throw new Error(orderData.error || 'Unable to reserve time slots.');
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Unable to confirm slot booking.');
       }
 
-      const razorpayUrl = 'https://razorpay.me/@edifynuvaaitechnologiesprivat';
+      setConfirmedBooking(data.booking);
+      setActiveCheckout(null);
+      setShowSlots(true);
+      setLastConfirmedMessage(`Booking saved! ${data.booking.student_name} confirmed for ${data.booking.slots_display || 'Workshop'}.`);
 
-      setActiveCheckout({
-        bookingId: orderData.booking_id,
-        orderId: orderData.order_id,
-        amount: orderData.amount,
-        baseAmount,
-        totalGst,
-        cgstAmount,
-        sgstAmount,
-        totalPayable,
-        slotsCount,
-        studentName,
-        studentEmail,
-        studentPhone,
-        college: collegeName.trim() || 'AreneSHA AI Summit Attendee',
-        slots: selectedSlotsList,
-        slotDate: selectedDate,
-        upiIntentUrl: orderData.upi_intent_url || `upi://pay?pa=${MERCHANT_UPI_ID}&pn=${encodeURIComponent(RAZORPAY_BENEFICIARY_NAME)}&am=${totalPayable}.00&cu=INR&tn=${encodeURIComponent(`AreneSHA Robo Slot ${orderData.booking_id}`)}`,
-        customPaymentUrl: razorpayUrl
-      });
+      // Instantly refresh slots so booked_count and available count update in real-time!
+      await fetchSlots(selectedDate);
 
-      // Automatically open Razorpay payment page in a new window/tab after submitting form
-      try {
-        window.open(razorpayUrl, '_blank', 'noopener,noreferrer');
-      } catch (e) {
-        console.warn('Popup blocked, available via button in modal', e);
-      }
-
+      // Clear form inputs and error states
+      setStudentName('');
+      setStudentEmail('');
+      setStudentPhone('');
+      setCollegeName('');
+      setSelectedSlotIds([]);
+      setFormErrors({});
     } catch (err) {
-      setPaymentError(err.message || 'Payment initiation failed.');
+      setPaymentError(err.message || 'Booking confirmation failed.');
     } finally {
       setProcessingPayment(false);
     }
+  };
+
+  // Close modal and keep the slot booking page open and scrolled into view
+  const handleCloseModal = () => {
+    setConfirmedBooking(null);
+    setShowSlots(true);
+    if (location.pathname !== '/booking') {
+      navigate('/booking');
+    }
+    setTimeout(() => {
+      slotSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
   };
 
   // Manual payment reference confirmation
@@ -487,8 +517,8 @@ export default function MeetRoboBooking() {
         </section>
       )}
 
-      {/* 3. WORKING SLOT BOOKING CODE (SHOWN ON /booking IN NEW TAB) */}
-      {isDirectBooking && (
+      {/* 3. WORKING SLOT BOOKING CODE (SHOWN ON /booking OR AFTER SIGNUP/SAVE) */}
+      {(isDirectBooking || showSlots) && (
         <>
           <div style={{ maxWidth: '1200px', margin: '24px auto 16px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Link 
@@ -498,6 +528,35 @@ export default function MeetRoboBooking() {
               <span>← Back to AI Education Summit</span>
             </Link>
           </div>
+
+          {lastConfirmedMessage && (
+            <div style={{
+              maxWidth: '1200px',
+              margin: '0 auto 16px',
+              padding: '12px 18px',
+              background: '#ECFDF5',
+              border: '1.5px solid #10B981',
+              borderRadius: '12px',
+              color: '#065F46',
+              fontWeight: 700,
+              fontSize: '0.92rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.12)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <CheckCircle2 size={20} color="#059669" />
+                <span>{lastConfirmedMessage}</span>
+              </div>
+              <button 
+                onClick={() => setLastConfirmedMessage(null)}
+                style={{ background: 'none', border: 'none', color: '#065F46', cursor: 'pointer', fontSize: '1.2rem', lineHeight: 1 }}
+              >
+                ×
+              </button>
+            </div>
+          )}
 
           <section 
             id="slot-booking-section"
@@ -517,52 +576,72 @@ export default function MeetRoboBooking() {
           <div>
             {/* Date Picker Bar */}
             <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '16px 20px', marginBottom: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#EEF2FF', color: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Calendar size={18} />
-                </div>
-                <div>
-                  <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block' }}>
-                    Event Date
-                  </label>
-                  <input 
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    style={{
-                      border: '1px solid #CBD5E1',
-                      borderRadius: '8px',
-                      padding: '5px 10px',
-                      fontSize: '0.9rem',
-                      fontWeight: 700,
-                      color: '#0F172A',
-                      outline: 'none',
-                      marginTop: '2px'
-                    }}
-                  />
+              <div>
+                <label style={{ fontSize: '0.74rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block' }}>
+                  Event Date
+                </label>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  background: '#F8FAFC',
+                  border: '1px solid #CBD5E1',
+                  borderRadius: '8px',
+                  padding: '6px 14px',
+                  fontSize: '0.95rem',
+                  fontWeight: 800,
+                  color: '#0F172A',
+                  marginTop: '4px',
+                  letterSpacing: '0.04em'
+                }}>
+                  02/10/2026
                 </div>
               </div>
 
-              <button 
-                type="button"
-                onClick={() => fetchSlots(selectedDate)}
-                style={{
-                  background: '#F1F5F9',
-                  border: '1px solid #CBD5E1',
-                  padding: '7px 12px',
-                  borderRadius: '8px',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  color: '#334155',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                <RefreshCw size={14} className={loading ? 'spin' : ''} />
-                Refresh Slots
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <a 
+                  href="/api/booking/export-csv"
+                  download="arenesha_student_registrations.csv"
+                  style={{
+                    background: '#ECFDF5',
+                    border: '1px solid #A7F3D0',
+                    padding: '7px 12px',
+                    borderRadius: '8px',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    color: '#065F46',
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    cursor: 'pointer'
+                  }}
+                  title="Export all student registrations to Excel CSV"
+                >
+                  <Download size={14} />
+                  Export to Excel
+                </a>
+
+                <button 
+                  type="button"
+                  onClick={() => fetchSlots(selectedDate)}
+                  style={{
+                    background: '#F1F5F9',
+                    border: '1px solid #CBD5E1',
+                    padding: '7px 12px',
+                    borderRadius: '8px',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    color: '#334155',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <RefreshCw size={14} className={loading ? 'spin' : ''} />
+                  Refresh Slots
+                </button>
+              </div>
             </div>
 
             {/* Slots Notice */}
@@ -572,7 +651,7 @@ export default function MeetRoboBooking() {
                 Available 15-Minute Sessions ({slots.length} Slots)
               </span>
               <span style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                {slotsCount} Selected ({slotsCount > 0 ? `₹${totalPayable}.00` : 'None'})
+                {slotsCount} Selected ({slotsCount > 0 ? `${slotsCount} Session${slotsCount > 1 ? 's' : ''}` : 'None'})
               </span>
             </div>
 
@@ -627,14 +706,14 @@ export default function MeetRoboBooking() {
                       </div>
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.74rem' }}>
-                        <span style={{ color: isSelected ? '#94A3B8' : '#64748B' }}>
-                          Capacity: {slot.booked_count}/{slot.max_capacity}
+                        <span style={{ color: isSelected ? '#94A3B8' : '#64748B', fontWeight: 600 }}>
+                          Booked: {slot.booked_count}/{slot.max_capacity}
                         </span>
                         <span style={{
                           fontWeight: 800,
                           color: isFull ? '#EF4444' : isSelected ? '#34D399' : '#059669'
                         }}>
-                          {isFull ? 'FULL' : `${available} Left`}
+                          {isFull ? 'FULL' : `${available} Available`}
                         </span>
                       </div>
                     </div>
@@ -655,8 +734,8 @@ export default function MeetRoboBooking() {
             top: '84px'
           }}>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CreditCard size={18} color="#4F46E5" />
-              Registration & Payment
+              <CheckCircle2 size={18} color="#4F46E5" />
+              Student Registration
             </h3>
 
             {paymentError && (
@@ -692,58 +771,105 @@ export default function MeetRoboBooking() {
               </span>
             </div>
 
-            <form onSubmit={handleInitiatePayment}>
+            <form onSubmit={handleConfirmBooking}>
               {/* Student Name */}
               <div style={{ marginBottom: '12px' }}>
-                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>
+                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: formErrors.name ? '#DC2626' : '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>
                   Full Name *
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <User size={15} style={{ position: 'absolute', left: '10px', top: '10px', color: '#94A3B8' }} />
+                  <User size={15} style={{ position: 'absolute', left: '10px', top: '10px', color: formErrors.name ? '#EF4444' : '#94A3B8' }} />
                   <input
                     type="text"
                     value={studentName}
-                    onChange={(e) => setStudentName(e.target.value)}
+                    onChange={(e) => {
+                      setStudentName(e.target.value);
+                      if (formErrors.name) setFormErrors(prev => ({ ...prev, name: null }));
+                    }}
                     placeholder="e.g. Rahul Sharma"
-                    required
-                    style={{ width: '100%', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '8px 10px 8px 32px', fontSize: '0.88rem', boxSizing: 'border-box' }}
+                    style={{
+                      width: '100%',
+                      border: formErrors.name ? '1.5px solid #EF4444' : '1px solid #CBD5E1',
+                      background: formErrors.name ? '#FEF2F2' : '#FFFFFF',
+                      borderRadius: '8px',
+                      padding: '8px 10px 8px 32px',
+                      fontSize: '0.88rem',
+                      boxSizing: 'border-box'
+                    }}
                   />
                 </div>
+                {formErrors.name && (
+                  <span style={{ color: '#EF4444', fontSize: '0.74rem', fontWeight: 700, display: 'block', marginTop: '3px' }}>
+                    {formErrors.name}
+                  </span>
+                )}
               </div>
 
               {/* Email */}
               <div style={{ marginBottom: '12px' }}>
-                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>
+                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: formErrors.email ? '#DC2626' : '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>
                   Email Address *
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <Mail size={15} style={{ position: 'absolute', left: '10px', top: '10px', color: '#94A3B8' }} />
+                  <Mail size={15} style={{ position: 'absolute', left: '10px', top: '10px', color: formErrors.email ? '#EF4444' : '#94A3B8' }} />
                   <input
                     type="email"
                     value={studentEmail}
-                    onChange={(e) => setStudentEmail(e.target.value)}
+                    onChange={(e) => {
+                      setStudentEmail(e.target.value);
+                      if (formErrors.email) setFormErrors(prev => ({ ...prev, email: null }));
+                    }}
                     placeholder="rahul@example.com"
-                    required
-                    style={{ width: '100%', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '8px 10px 8px 32px', fontSize: '0.88rem', boxSizing: 'border-box' }}
+                    style={{
+                      width: '100%',
+                      border: formErrors.email ? '1.5px solid #EF4444' : '1px solid #CBD5E1',
+                      background: formErrors.email ? '#FEF2F2' : '#FFFFFF',
+                      borderRadius: '8px',
+                      padding: '8px 10px 8px 32px',
+                      fontSize: '0.88rem',
+                      boxSizing: 'border-box'
+                    }}
                   />
                 </div>
+                {formErrors.email && (
+                  <span style={{ color: '#EF4444', fontSize: '0.74rem', fontWeight: 700, display: 'block', marginTop: '3px' }}>
+                    {formErrors.email}
+                  </span>
+                )}
               </div>
 
               {/* Mobile Phone */}
               <div style={{ marginBottom: '12px' }}>
-                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>
-                  Mobile Number
+                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 800, color: formErrors.phone ? '#DC2626' : '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>
+                  Mobile Number (10 Digits) *
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <Phone size={15} style={{ position: 'absolute', left: '10px', top: '10px', color: '#94A3B8' }} />
+                  <Phone size={15} style={{ position: 'absolute', left: '10px', top: '10px', color: formErrors.phone ? '#EF4444' : '#94A3B8' }} />
                   <input
                     type="tel"
                     value={studentPhone}
-                    onChange={(e) => setStudentPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    style={{ width: '100%', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '8px 10px 8px 32px', fontSize: '0.88rem', boxSizing: 'border-box' }}
+                    onChange={(e) => {
+                      setStudentPhone(e.target.value);
+                      if (formErrors.phone) setFormErrors(prev => ({ ...prev, phone: null }));
+                    }}
+                    placeholder="e.g. 9876543210"
+                    maxLength={14}
+                    style={{
+                      width: '100%',
+                      border: formErrors.phone ? '1.5px solid #EF4444' : '1px solid #CBD5E1',
+                      background: formErrors.phone ? '#FEF2F2' : '#FFFFFF',
+                      borderRadius: '8px',
+                      padding: '8px 10px 8px 32px',
+                      fontSize: '0.88rem',
+                      boxSizing: 'border-box'
+                    }}
                   />
                 </div>
+                {formErrors.phone && (
+                  <span style={{ color: '#EF4444', fontSize: '0.74rem', fontWeight: 700, display: 'block', marginTop: '3px' }}>
+                    {formErrors.phone}
+                  </span>
+                )}
               </div>
 
               {/* College / Organization */}
@@ -763,31 +889,7 @@ export default function MeetRoboBooking() {
                 </div>
               </div>
 
-              {/* Order Cost Breakdown Box */}
-              <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '14px', marginBottom: '18px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#475569', marginBottom: '6px' }}>
-                  <span>Selected Slots ({slotsCount}):</span>
-                  <span style={{ fontWeight: 700 }}>₹{baseAmount}.00</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#475569', marginBottom: '6px' }}>
-                  <span>CGST (9%):</span>
-                  <span>₹{cgstAmount}.00</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#475569', marginBottom: '6px' }}>
-                  <span>SGST (9%):</span>
-                  <span>₹{sgstAmount}.00</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#0369A1', marginBottom: '8px' }}>
-                  <span>Total Govt. GST (18%):</span>
-                  <span style={{ fontWeight: 700 }}>₹{totalGst}.00</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #CBD5E1', paddingTop: '8px', fontWeight: 900 }}>
-                  <span style={{ fontSize: '0.92rem', color: '#0F172A' }}>Total Payable:</span>
-                  <span style={{ fontSize: '1.25rem', color: '#059669' }}>₹{totalPayable}.00</span>
-                </div>
-              </div>
-
-              {/* Checkout Button */}
+              {/* Confirm Booking Button */}
               <button
                 type="submit"
                 disabled={processingPayment || slotsCount === 0}
@@ -798,7 +900,7 @@ export default function MeetRoboBooking() {
                   border: 'none',
                   borderRadius: '12px',
                   padding: '14px',
-                  fontSize: '0.95rem',
+                  fontSize: '1rem',
                   fontWeight: 800,
                   cursor: slotsCount === 0 ? 'not-allowed' : 'pointer',
                   display: 'flex',
@@ -809,10 +911,15 @@ export default function MeetRoboBooking() {
                   transition: 'all 0.2s'
                 }}
               >
-                {processingPayment ? 'Processing...' : (
+                {processingPayment ? (
                   <>
-                    <span>Proceed to Pay ₹{totalPayable}.00</span>
-                    <ArrowRight size={16} />
+                    <RefreshCw size={16} className="spin" />
+                    <span>Confirming Booking...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={18} />
+                    <span>Confirm Booking</span>
                   </>
                 )}
               </button>
@@ -997,7 +1104,7 @@ export default function MeetRoboBooking() {
             position: 'relative'
           }}>
             <button
-              onClick={() => setConfirmedBooking(null)}
+              onClick={handleCloseModal}
               style={{ position: 'absolute', top: '18px', right: '18px', background: '#F1F5F9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             >
               <X size={18} />
@@ -1010,68 +1117,78 @@ export default function MeetRoboBooking() {
               <h2 style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0F172A', margin: '0 0 4px 0' }}>
                 Robot Workshop Slot Confirmed!
               </h2>
-              <p style={{ color: '#64748B', fontSize: '0.86rem', margin: 0 }}>
-                Your Main Gate Entry PIN and Pass Receipt have been generated.
-              </p>
             </div>
 
             {/* Gate Pass Card */}
-            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '18px', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <div>
-                  <span style={{ fontSize: '0.72rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 800 }}>Gate Entry PIN</span>
-                  <div style={{ background: '#0F172A', color: '#B6FF1B', padding: '4px 12px', borderRadius: '6px', fontSize: '1.25rem', fontWeight: 900, letterSpacing: '0.12em', marginTop: '2px', display: 'inline-block' }}>
-                    {confirmedBooking.entry_pin || '389201'}
-                  </div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontSize: '0.72rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 800 }}>Booking ID</span>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#4F46E5', marginTop: '2px' }}>
-                    {confirmedBooking.id}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '12px', fontSize: '0.84rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '22px 20px', marginBottom: '20px' }}>
+              <div style={{ fontSize: '0.9rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ color: '#64748B' }}>Student Name:</span>
                   <strong>{confirmedBooking.student_name}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ color: '#64748B' }}>Total Paid (incl. 18% GST):</span>
-                  <strong style={{ color: '#059669' }}>₹{confirmedBooking.total_amount}.00</strong>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ color: '#64748B' }}>Session Time:</span>
+                  <strong style={{ color: '#4F46E5' }}>{confirmedBooking.slots_display || '15-min Workshop'}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ color: '#64748B' }}>Pass Status:</span>
+                  <strong style={{ color: '#059669' }}>CONFIRMED & APPROVED</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: '#64748B' }}>Date & Venue:</span>
-                  <span>{confirmedBooking.slot_date} • Meenakshi Tech Park</span>
+                  <span>{confirmedBooking.slot_date || '02/10/2026'} • Meenakshi Tech Park</span>
                 </div>
               </div>
             </div>
 
-            <button
-              onClick={() => {
-                setConfirmedBooking(null);
-                window.print();
-              }}
-              style={{
-                width: '100%',
-                background: '#0F172A',
-                color: '#FFFFFF',
-                border: 'none',
-                borderRadius: '10px',
-                padding: '12px',
-                fontSize: '0.9rem',
-                fontWeight: 800,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}
-            >
-              <Download size={16} />
-              <span>Print / Download Gate Pass Receipt</span>
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                onClick={() => {
+                  window.print();
+                }}
+                style={{
+                  width: '100%',
+                  background: '#0F172A',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '12px',
+                  fontSize: '0.9rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <Download size={16} />
+                <span>Print / Download Gate Pass Receipt</span>
+              </button>
+
+              <button
+                onClick={handleCloseModal}
+                style={{
+                  width: '100%',
+                  background: '#4F46E5',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '12px',
+                  fontSize: '0.9rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 14px rgba(79, 70, 229, 0.3)'
+                }}
+              >
+                <Clock size={16} />
+                <span>Open Slots Page</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -79,6 +79,59 @@ function randomString(length = 8) {
 }
 
 /**
+ * Helper to dispatch SMS via Twilio API
+ */
+async function sendTwilioSMS(env, toPhone, bodyText) {
+  const accountSid = (env && env.TWILIO_ACCOUNT_SID) || process.env.TWILIO_ACCOUNT_SID || '';
+  const authToken = (env && env.TWILIO_AUTH_TOKEN) || process.env.TWILIO_AUTH_TOKEN || '';
+  const fromPhone = (env && env.TWILIO_FROM) || process.env.TWILIO_FROM || '';
+
+  if (!toPhone || !accountSid || !authToken) {
+    return { sent: false, message: 'Twilio credentials not configured' };
+  }
+
+  let formattedTo = toPhone.trim().replace(/\s+/g, '').replace(/-/g, '');
+  if (!formattedTo.startsWith('+')) {
+    if (formattedTo.length === 10) {
+      formattedTo = '+91' + formattedTo;
+    } else {
+      formattedTo = '+' + formattedTo;
+    }
+  }
+
+  const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+  const authHeader = 'Basic ' + btoa(`${accountSid}:${authToken}`);
+
+  const formData = new URLSearchParams();
+  formData.append('To', formattedTo);
+  formData.append('From', fromPhone);
+  formData.append('Body', bodyText);
+
+  try {
+    const res = await fetch(twilioUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: formData.toString()
+    });
+
+    const data = await res.json();
+    if (res.ok && data.sid) {
+      console.log(`[Twilio SMS Success] SID: ${data.sid} To: ${formattedTo}`);
+      return { sent: true, sid: data.sid, message: 'SMS dispatched successfully via Twilio' };
+    } else {
+      console.warn(`[Twilio SMS Rejected]`, data.message || data);
+      return { sent: false, error: data.message || 'Twilio rejected' };
+    }
+  } catch (err) {
+    console.error('[Twilio SMS Error]', err);
+    return { sent: false, error: err.message };
+  }
+}
+
+/**
  * Ensures all 24 slots exist in D1 for the given date
  */
 export async function ensureSlotsForDate(db, dateStr) {
@@ -250,6 +303,165 @@ export async function handleBookingRoutes(request, path, url, db, env, corsHeade
       razorpay_key_id: razorpayKeyId,
       razorpay_payment_url: RAZORPAY_PAYMENT_URL
     });
+  }
+
+  // 1b. POST /api/booking/confirm-direct (Direct Free Confirmation without payment)
+  if ((path === '/api/booking/confirm-direct' || path === '/api/booking/confirm' || path === '/api/booking/confirm-payment') && request.method === 'POST') {
+    try {
+      const body = await request.json();
+      const date = (body.date || body.slot_date || '2026-10-02').trim();
+      let slot_ids = Array.isArray(body.slot_ids) ? body.slot_ids : [];
+      const student_name = (body.student_name || 'Student').trim();
+      const student_email = (body.student_email || '').trim().toLowerCase();
+      const student_phone = (body.student_phone || '').trim();
+      const college = (body.college || 'AreneSHA AI Summit Attendee').trim();
+
+      await ensureSlotsForDate(db, date);
+
+      // If slot_ids is empty, automatically pick the first open available slot
+      if (slot_ids.length === 0) {
+        const firstSlot = await db.prepare(`
+          SELECT id FROM student_slots WHERE slot_date = ? AND booked_count < max_capacity ORDER BY slot_index ASC LIMIT 1
+        `).bind(date).first();
+        if (firstSlot) {
+          slot_ids = [firstSlot.id];
+        } else {
+          return jsonRes({ success: false, error: 'All slots for this date are full. Please choose another date.' }, 400);
+        }
+      }
+
+      // Verify each slot exists and has capacity
+      const slotsDetails = [];
+      for (const slotId of slot_ids) {
+        const slotRow = await db.prepare(`
+          SELECT * FROM student_slots WHERE id = ?
+        `).bind(slotId).first();
+
+        if (!slotRow) {
+          return jsonRes({ success: false, error: `Invalid slot selected: ${slotId}` }, 400);
+        }
+
+        if (slotRow.booked_count >= slotRow.max_capacity) {
+          return jsonRes({
+            success: false,
+            error: `Slot "${slotRow.slot_label}" is FULL (${slotRow.max_capacity}/${slotRow.max_capacity} students booked). Please choose another slot.`
+          }, 400);
+        }
+
+        slotsDetails.push(slotRow);
+      }
+
+      const bookingId = `BKG-${randomString(10)}`;
+      const entryPin = Math.floor(100000 + Math.random() * 900000).toString();
+      const qrToken = `PASS-${randomString(12)}`;
+      const slotsDisplay = slotsDetails.map(s => `${s.start_time} - ${s.end_time}`).join(', ');
+      const nowIso = new Date().toISOString();
+
+      // 1. Insert confirmed student booking first (parent table for foreign key)
+      await db.prepare(`
+        INSERT INTO student_bookings (
+          id, student_name, student_email, student_phone, booking_date,
+          slots_count, slot_ids_json, slots_display,
+          base_amount, cgst_amount, sgst_amount, gst_amount, total_amount,
+          razorpay_order_id, razorpay_payment_id, razorpay_signature,
+          payment_status, booking_status, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, 0, 'DIRECT_CONFIRMED', 'FREE_PASS', ?, 'CONFIRMED', 'CONFIRMED', ?, ?)
+      `).bind(
+        bookingId,
+        student_name,
+        student_email,
+        student_phone,
+        date,
+        slotsDetails.length,
+        JSON.stringify(slot_ids),
+        slotsDisplay,
+        entryPin,
+        nowIso,
+        nowIso
+      ).run();
+
+      // 2. Increment capacity in student_slots and insert child reservations
+      for (const slot of slotsDetails) {
+        await db.prepare(`
+          UPDATE student_slots
+          SET booked_count = booked_count + 1,
+              status = CASE WHEN (booked_count + 1) >= max_capacity THEN 'FULL' ELSE 'AVAILABLE' END,
+              updated_at = ?
+          WHERE id = ?
+        `).bind(nowIso, slot.id).run();
+
+        const resId = `RES-${randomString(10)}`;
+        await db.prepare(`
+          INSERT INTO student_slot_reservations (
+            id, booking_id, slot_id, slot_date, student_email, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?)
+        `).bind(resId, bookingId, slot.id, date, student_email, nowIso).run();
+      }
+
+      // 3. Create Main Gate invitation pass record so gate security can verify QR / PIN
+      const invId = `INV-${randomString(8)}`;
+      const eventDateStart = new Date(`${date}T00:00:00.000Z`).toISOString();
+      const eventDateEnd = new Date(`${date}T23:59:59.000Z`).toISOString();
+
+      try {
+        await db.prepare(`
+          INSERT INTO invitations (
+            id, visitor_name, visitor_phone, visitor_email, purpose,
+            host_name, host_department, vehicle_number, entry_code,
+            qr_token, valid_from, valid_until, entry_type, max_entries,
+            entries_used, status, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, 'SINGLE', 1, 0, 'ACTIVE', ?, ?)
+        `).bind(
+          invId,
+          student_name,
+          student_phone || null,
+          student_email || null,
+          `Robotics Workshop (${slotsDisplay})`,
+          'AreneSHA Robotics Lab',
+          `Meenakshi Tech Park • ${college}`,
+          entryPin,
+          qrToken,
+          eventDateStart,
+          eventDateEnd,
+          nowIso,
+          nowIso
+        ).run();
+      } catch (invErr) {
+        console.warn('Could not insert invitation pass:', invErr);
+      }
+
+      // 4. Send SMS Confirmation via Twilio API
+      let smsStatus = { sent: false, message: 'No phone number provided' };
+      if (student_phone) {
+        const smsMessage = `AreneSHA Robot Workshop: Registration CONFIRMED for ${student_name}! Date: 02/10/2026, Session: ${slotsDisplay}. Gate Entry PIN: ${entryPin}. Venue: Meenakshi Tech Park, Gachibowli.`;
+        smsStatus = await sendTwilioSMS(env, student_phone, smsMessage);
+      }
+
+      return jsonRes({
+        success: true,
+        sms: smsStatus,
+        booking: {
+          id: bookingId,
+          entry_pin: entryPin,
+          qr_token: qrToken,
+          student_name,
+          student_email,
+          student_phone,
+          college,
+          slot_date: date,
+          slots_count: slotsDetails.length,
+          slots_display: slotsDisplay,
+          slots: slotsDetails.map(s => ({ id: s.id, label: s.slot_label, start_time: s.start_time, end_time: s.end_time })),
+          booking_status: 'CONFIRMED',
+          payment_status: 'CONFIRMED',
+          total_amount: 0,
+          created_at: nowIso
+        }
+      }, 201);
+    } catch (err) {
+      console.error('Direct booking confirmation error:', err);
+      return jsonRes({ success: false, error: err.message }, 500);
+    }
   }
 
   // 2. POST /api/booking/create-order
@@ -506,8 +718,56 @@ export async function handleBookingRoutes(request, path, url, db, env, corsHeade
     }
   }
 
+  // 4b. GET /api/booking/export-csv or /api/admin/booking/export-csv (Excel-ready CSV export)
+  if ((path === '/api/booking/export-csv' || path === '/api/admin/booking/export-csv') && request.method === 'GET') {
+    const { results } = await db.prepare(`
+      SELECT * FROM student_bookings ORDER BY created_at DESC
+    `).all();
+
+    const headers = [
+      'Booking ID',
+      'Student Name',
+      'Student Email',
+      'Student Phone',
+      'Event Date',
+      'Session Slots',
+      'Total Slots',
+      'Gate Entry PIN',
+      'Booking Status',
+      'Registration Time'
+    ];
+
+    const rows = [headers.join(',')];
+
+    for (const b of (results || [])) {
+      const pin = b.razorpay_signature || 'N/A';
+      const row = [
+        `"${b.id || ''}"`,
+        `"${(b.student_name || '').replace(/"/g, '""')}"`,
+        `"${(b.student_email || '').replace(/"/g, '""')}"`,
+        `"${(b.student_phone || '').replace(/"/g, '""')}"`,
+        `"${b.booking_date || ''}"`,
+        `"${(b.slots_display || '').replace(/"/g, '""')}"`,
+        b.slots_count || 1,
+        `"${pin}"`,
+        `"${b.booking_status || 'CONFIRMED'}"`,
+        `"${b.created_at || ''}"`
+      ];
+      rows.push(row.join(','));
+    }
+
+    const csvContent = '\uFEFF' + rows.join('\r\n');
+    return new Response(csvContent, {
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="arenesha_registered_students_${new Date().toISOString().slice(0, 10)}.csv"`,
+        ...corsHeaders
+      }
+    });
+  }
+
   // 5. GET /api/booking/:id
-  if (path.startsWith('/api/booking/') && request.method === 'GET') {
+  if (path.startsWith('/api/booking/') && !path.includes('export-csv') && request.method === 'GET') {
     const bookingId = path.replace('/api/booking/', '');
     const booking = await db.prepare(`
       SELECT * FROM student_bookings WHERE id = ?

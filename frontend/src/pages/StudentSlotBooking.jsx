@@ -10,10 +10,7 @@ import { RAZORPAY_PAYMENT_URL, RAZORPAY_BENEFICIARY_NAME, RAZORPAY_HANDLE, MERCH
 const BASE_PRICE = 500;
 
 export default function StudentSlotBooking() {
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  });
+  const [selectedDate, setSelectedDate] = useState('2026-10-02');
 
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -412,32 +409,26 @@ export default function StudentSlotBooking() {
         <div>
           {/* Date Picker Bar */}
           <div className="glass-card" style={{ padding: '18px 22px', borderRadius: '16px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#EEF2FF', color: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Calendar size={20} />
-              </div>
               <div>
                 <label style={{ fontSize: '0.76rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block' }}>
-                  Select Booking Date
+                  Event Date
                 </label>
-                <input 
-                  type="date"
-                  value={selectedDate}
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  style={{ 
-                    border: '1px solid #CBD5E1', 
-                    borderRadius: '8px', 
-                    padding: '6px 12px', 
-                    fontSize: '0.92rem', 
-                    fontWeight: 700,
-                    color: '#0F172A',
-                    outline: 'none',
-                    marginTop: '3px'
-                  }}
-                />
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  background: '#F8FAFC',
+                  border: '1px solid #CBD5E1',
+                  borderRadius: '8px',
+                  padding: '6px 14px',
+                  fontSize: '0.95rem',
+                  fontWeight: 800,
+                  color: '#0F172A',
+                  marginTop: '4px',
+                  letterSpacing: '0.04em'
+                }}>
+                  02/10/2026
+                </div>
               </div>
-            </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <button 
