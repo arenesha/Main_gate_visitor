@@ -87,24 +87,41 @@ export default function AdminCreateInvitation() {
     setNotifications(prev => ({ ...prev, [channel]: !prev[channel] }));
   };
 
-  // Clear visitor fields and reset host/office to convenient defaults
-  const clearForm = () => {
+  // 1-Click Fast Template for testing
+  const fillSample = (type) => {
     const now = new Date();
     const fromLocal = formatLocalInputDateTime(now);
     const untilLocal = formatLocalInputDateTime(new Date(now.getTime() + 24 * 60 * 60 * 1000));
-    setFormData({
-      visitor_name: '',
-      visitor_phone: '',
-      visitor_email: '',
-      vehicle_number: '',
-      aadhaar_number: '',
-      purpose: '',
-      host_name: 'AreneSHA Workspace',
-      company: 'AreneSHA',
-      host_department: 'B-Block, MEENAKSHI TECH PARK, 11th, Gachibowli, Hyderabad, Telangana 500032',
-      valid_from: fromLocal,
-      valid_until: untilLocal
-    });
+
+    if (type === 'sample' || type === 'priti') {
+      setFormData({
+        visitor_name: 'Priti',
+        visitor_phone: '+91 98765 43210',
+        visitor_email: '',
+        vehicle_number: 'TS-09-EA-2026',
+        aadhaar_number: '9845 2310 7712',
+        purpose: 'workspace',
+        host_name: 'AreneSHA Workspace',
+        company: 'AreneSHA',
+        host_department: 'B-Block, MEENAKSHI TECH PARK, 11th, Gachibowli, Hyderabad, Telangana 500032',
+        valid_from: fromLocal,
+        valid_until: untilLocal
+      });
+    } else if (type === 'clear') {
+      setFormData({
+        visitor_name: '',
+        visitor_phone: '',
+        visitor_email: '',
+        vehicle_number: '',
+        aadhaar_number: '',
+        purpose: '',
+        host_name: 'AreneSHA Workspace',
+        company: 'AreneSHA',
+        host_department: 'B-Block, MEENAKSHI TECH PARK, 11th, Gachibowli, Hyderabad, Telangana 500032',
+        valid_from: fromLocal,
+        valid_until: untilLocal
+      });
+    }
     setFormErrors({});
     setErrorBanner(null);
   };
@@ -249,7 +266,7 @@ export default function AdminCreateInvitation() {
 
       toast.success(`Visitor Pass ${inv.id} created successfully!`);
 
-        // Automatically reset form inputs for next visitor registration (preserves host defaults)
+        // Automatically reset form inputs for next visitor registration
         setFormData({
           visitor_name: '',
           visitor_phone: '',
@@ -414,7 +431,7 @@ export default function AdminCreateInvitation() {
               onClick={() => {
                 setCreatedPass(null);
                 setNotificationResults(null);
-                clearForm();
+                fillSample('clear');
               }}
               className="btn btn-secondary"
               style={{ padding: '10px 18px', fontWeight: 600, fontSize: '0.88rem' }}
@@ -440,16 +457,27 @@ export default function AdminCreateInvitation() {
                 </p>
               </div>
 
-              {/* Clear Form Button */}
+              {/* Fast autofill preset */}
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   type="button"
-                  onClick={clearForm}
+                  onClick={() => fillSample('priti')}
+                  className="btn btn-secondary btn-sm"
+                  style={{ background: '#EEF2FF', borderColor: '#C7D2FE', color: '#4338CA', fontSize: '0.8rem' }}
+                  title="Autofill sample visitor details for quick testing"
+                >
+                  <Sparkles size={13} />
+                  <span>Autofill Sample</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => fillSample('clear')}
                   className="btn btn-secondary btn-sm"
                   style={{ fontSize: '0.8rem' }}
                   title="Clear all fields"
                 >
-                  Clear Form
+                  Clear
                 </button>
               </div>
             </div>
@@ -639,7 +667,7 @@ export default function AdminCreateInvitation() {
                     <input
                       type="text"
                       name="company"
-                      placeholder="e.g. AreneSHA"
+                      placeholder="e.g. AreneSHA Solutions"
                       className="form-input"
                       value={formData.company}
                       onChange={handleChange}
@@ -649,13 +677,12 @@ export default function AdminCreateInvitation() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Destination / Office Location <span className="optional-text">(Default: Meenakshi Tech Park)</span></label>
+                <label className="form-label">Destination / Office Location</label>
                 <div className="input-wrapper">
                   <MapPin size={16} className="input-icon" />
                   <input
                     type="text"
                     name="host_department"
-                    placeholder="e.g. B-Block, MEENAKSHI TECH PARK, 11th, Gachibowli, Hyderabad, Telangana 500032"
                     className="form-input"
                     value={formData.host_department}
                     onChange={handleChange}

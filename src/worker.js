@@ -3,6 +3,7 @@
  * Integrates Cloudflare D1 and React Static Assets
  * Production-Ready Real Guard Gate Verification & Entry Flow
  */
+import { handleBookingRoutes } from './bookingService.js';
 
 // Helper to generate a random uppercase alphanumeric string
 function generateRandomAlphanumeric(length = 6) {
@@ -67,7 +68,7 @@ async function dispatchGuardActivationEmail(db, guardUser, origin, env) {
   try {
     const logId = `LOG-ACT-${generateRandomAlphanumeric(8)}`;
     const nowIso = new Date().toISOString();
-    const gateUrl = (origin && !origin.includes('8788')) ? `${origin}/gate` : 'http://localhost:5173/gate';
+    const gateUrl = 'http://localhost:8788/gate';
 
     const payload = {
       name: 'AreneSHA Guard',
@@ -236,6 +237,20 @@ export default {
       // Auto-ensure default users on first request
       if (db && path.startsWith('/api/')) {
         await ensureDefaultUsers(db);
+      }
+
+      // -------------------------------------------------------------
+      // 0. STUDENT SLOT BOOKING & RAZORPAY PAYMENT ROUTES
+      // -------------------------------------------------------------
+      if (path.startsWith('/api/booking') || path.startsWith('/api/admin/booking')) {
+        const bookingRes = await handleBookingRoutes(request, path, url, db, env, {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
+        });
+        if (bookingRes) {
+          return bookingRes;
+        }
       }
 
       // -------------------------------------------------------------
@@ -499,7 +514,7 @@ export default {
               const segments = urlObj.pathname.split('/');
               possibleId = segments[segments.length - 1];
             }
-          } catch (e) { }
+          } catch (e) {}
 
           inv = await db.prepare('SELECT * FROM invitations WHERE qr_token = ?').bind(tokenToMatch).first();
           if (!inv && possibleId) {
@@ -722,26 +737,6 @@ export default {
         const newUsedCount = (inv.entries_used || 0) + 1;
         const finalStatus = (newUsedCount >= inv.max_entries && inv.entry_type === 'SINGLE') ? 'USED' : 'ACTIVE';
 
-        // Dispatch real-time security alert to arenesha20@gmail.com on visitor check-in
-        try {
-          fetch('http://127.0.0.1:8005/api/dispatch-security-alert', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: inv.id,
-              visitor_name: inv.visitor_name,
-              visitor_phone: inv.visitor_phone,
-              visitor_email: inv.visitor_email,
-              purpose: inv.purpose,
-              host_name: inv.host_name,
-              entry_code: inv.entry_code,
-              vehicle_number: inv.vehicle_number,
-              verified_by: guardLabel,
-              event_type: 'ENTRY_ALLOWED'
-            })
-          }).catch(() => { });
-        } catch (e) { }
-
         return jsonResponse({
           success: true,
           authorized: true,
@@ -918,7 +913,7 @@ export default {
           visitor_email ? visitor_email.trim() : null,
           purpose.trim(),
           host_name.trim(),
-          host_department ? host_department.trim() : null,
+          host_department ? host_department.trim() : 'B-Block, MEENAKSHI TECH PARK, 11th, Gachibowli, Hyderabad, Telangana 500032',
           vehicle_number ? vehicle_number.trim().toUpperCase() : null,
           entry_code,
           qr_token,
@@ -939,25 +934,6 @@ export default {
           notificationStatus.sms = smsResult;
         }
 
-        // Dispatch real-time security alert to arenesha20@gmail.com on visitor pass creation
-        try {
-          fetch('http://127.0.0.1:8005/api/dispatch-security-alert', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id,
-              visitor_name,
-              visitor_phone,
-              visitor_email,
-              purpose,
-              host_name,
-              entry_code,
-              vehicle_number,
-              event_type: 'INVITATION_CREATED'
-            })
-          }).catch(() => { });
-        } catch (e) { }
-
         return jsonResponse({
           success: true,
           message: 'Invitation created successfully',
@@ -969,7 +945,7 @@ export default {
             visitor_email,
             purpose,
             host_name,
-            host_department: host_department ? host_department.trim() : '',
+            host_department: host_department || 'B-Block, MEENAKSHI TECH PARK, 11th, Gachibowli, Hyderabad, Telangana 500032',
             vehicle_number,
             entry_code,
             qr_token,
@@ -1139,8 +1115,8 @@ export default {
       const deleteMatch = path.match(/^\/api\/invitations\/([A-Za-z0-9_-]+)$/);
       if (deleteMatch && request.method === 'DELETE') {
         const id = deleteMatch[1];
-        try { await db.prepare('DELETE FROM gate_verifications WHERE invitation_id = ?').bind(id).run(); } catch (e) { }
-        try { await db.prepare('DELETE FROM invitations WHERE id = ?').bind(id).run(); } catch (e) { }
+        try { await db.prepare('DELETE FROM gate_verifications WHERE invitation_id = ?').bind(id).run(); } catch (e) {}
+        try { await db.prepare('DELETE FROM invitations WHERE id = ?').bind(id).run(); } catch (e) {}
 
         return jsonResponse({
           success: true,
@@ -1296,7 +1272,7 @@ export default {
             const segments = urlObj.pathname.split('/');
             possibleId = segments[segments.length - 1];
           }
-        } catch (e) { }
+        } catch (e) {}
 
         let inv = await db.prepare('SELECT * FROM invitations WHERE qr_token = ?').bind(tokenToMatch).first();
         if (!inv && possibleId) {
@@ -1497,10 +1473,10 @@ export default {
 
       // 3.13 Clear Data (POST /api/admin/clear-all-data)
       if (path === '/api/admin/clear-all-data' && request.method === 'POST') {
-        try { await db.prepare('DELETE FROM gate_verifications').run(); } catch (e) { }
-        try { await db.prepare('DELETE FROM guard_activation_logs').run(); } catch (e) { }
-        try { await db.prepare('DELETE FROM email_logs').run(); } catch (e) { }
-        try { await db.prepare('DELETE FROM invitations').run(); } catch (e) { }
+        try { await db.prepare('DELETE FROM gate_verifications').run(); } catch (e) {}
+        try { await db.prepare('DELETE FROM guard_activation_logs').run(); } catch (e) {}
+        try { await db.prepare('DELETE FROM email_logs').run(); } catch (e) {}
+        try { await db.prepare('DELETE FROM invitations').run(); } catch (e) {}
         return jsonResponse({
           success: true,
           message: 'All previous invitations, gate verifications, and email logs have been deleted successfully.'
@@ -1551,9 +1527,9 @@ async function logVerification(db, id, invitation_id, method, status, reason, ve
 
 // Helper function to send SMS via Twilio API
 async function sendTwilioSMS(env, toPhone, bodyText) {
-  const accountSid = env?.TWILIO_ACCOUNT_SID || env?.SMS_API_KEY;
-  const authToken = env?.TWILIO_AUTH_TOKEN || env?.SMS_API_SECRET;
-  const fromPhone = env?.TWILIO_FROM || env?.SMS_FROM;
+  const accountSid = env?.TWILIO_ACCOUNT_SID || env?.SMS_API_KEY || '';
+  const authToken = env?.TWILIO_AUTH_TOKEN || env?.SMS_API_SECRET || '';
+  const fromPhone = env?.TWILIO_FROM || env?.SMS_FROM || '';
 
   if (!toPhone || !accountSid || !authToken) {
     return { sent: false, message: 'Twilio credentials not configured' };

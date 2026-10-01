@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  ShieldCheck, ShieldAlert, Camera, KeyRound, CheckCircle2, XCircle, 
-  AlertTriangle, RefreshCw, Car, User, Building2, Delete, 
+import {
+  ShieldCheck, ShieldAlert, Camera, KeyRound, CheckCircle2, XCircle,
+  AlertTriangle, RefreshCw, Car, User, Building2, Delete,
   Sparkles, QrCode, Search, Check, Copy, Clock, Shield, LogIn, Lock,
   ChevronRight, ArrowLeft, AlertCircle, Info, Calendar, MapPin
 } from 'lucide-react';
@@ -14,11 +14,11 @@ export default function GateVerification() {
 
   // Mode: 'QR' or 'OTP'
   const [activeMode, setActiveMode] = useState('QR');
-  
+
   // Guard Gate Workflow States:
   // 'IDLE' -> 'SCANNING' -> 'VISUAL_VERIFY' -> 'ENTRY_ALLOWED' -> 'ENTRY_DENIED' -> 'INVALID_PASS'
   const [gateState, setGateState] = useState('IDLE');
-  
+
   // Scanned / Lookup Result Data from real DB
   const [verifiedPass, setVerifiedPass] = useState(null);
   const [verificationResult, setVerificationResult] = useState(null);
@@ -26,7 +26,7 @@ export default function GateVerification() {
 
   // OTP Fallback state
   const [otpCode, setOtpCode] = useState('');
-  
+
   // Camera Modal
   const [scannerOpen, setScannerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -68,7 +68,7 @@ export default function GateVerification() {
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.4);
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   // Load Expected Visitors List
@@ -109,7 +109,7 @@ export default function GateVerification() {
     setErrorDetails(null);
 
     try {
-      const requestBody = method === 'QR_SCAN' 
+      const requestBody = method === 'QR_SCAN'
         ? { qr_payload: payload }
         : { otp_code: payload };
 
@@ -256,7 +256,7 @@ export default function GateVerification() {
     }
   };
 
-  const filteredGuests = expectedVisitors.filter(v => 
+  const filteredGuests = expectedVisitors.filter(v =>
     v.visitor_name?.toLowerCase().includes(searchGuest.toLowerCase()) ||
     v.entry_code?.includes(searchGuest) ||
     v.host_name?.toLowerCase().includes(searchGuest.toLowerCase()) ||
@@ -280,7 +280,7 @@ export default function GateVerification() {
           <Link to="/" className="btn btn-secondary" style={{ fontWeight: 700 }}>
             Return to Overview
           </Link>
-          <button 
+          <button
             onClick={() => login('arenesha20@gmail.com', 'Guard@AreneSHA2026')}
             className="btn btn-primary"
             style={{ background: '#1E3E47', fontWeight: 700 }}
@@ -372,7 +372,7 @@ export default function GateVerification() {
 
       {/* Main Gate Terminal Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.35fr) minmax(320px, 1fr)', gap: '24px', alignItems: 'start' }}>
-        
+
         {/* LEFT COLUMN: ACTIVE WORKFLOW CONTAINER */}
         <div>
 
@@ -381,7 +381,7 @@ export default function GateVerification() {
           {/* ======================================================== */}
           {gateState === 'IDLE' && (
             <div className="glass-card" style={{ padding: '28px', background: '#FFFFFF' }}>
-              
+
               {/* Mode Switcher */}
               <div style={{ display: 'flex', gap: '8px', background: '#F1F5F9', padding: '6px', borderRadius: '12px', marginBottom: '24px' }}>
                 <button
@@ -576,7 +576,7 @@ export default function GateVerification() {
           {/* ======================================================== */}
           {gateState === 'VISUAL_VERIFY' && verifiedPass && (
             <div className="glass-card" style={{ padding: '0', background: '#FFFFFF', overflow: 'hidden', border: '2px solid #059669', boxShadow: '0 12px 36px rgba(5, 150, 105, 0.15)' }}>
-              
+
               {/* Card Banner */}
               <div style={{
                 background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
@@ -613,7 +613,7 @@ export default function GateVerification() {
 
               {/* Visitor Details Display */}
               <div style={{ padding: '24px' }}>
-                
+
                 {/* Visitor Profile Header */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #F1F5F9' }}>
                   <div style={{
@@ -646,7 +646,7 @@ export default function GateVerification() {
 
                 {/* Details Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '24px' }}>
-                  
+
                   <div style={{ background: '#F8FAFC', padding: '12px 16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                     <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: '#64748B', fontWeight: 700 }}>Host / Inviter</span>
                     <div style={{ fontSize: '0.98rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>
@@ -761,7 +761,7 @@ export default function GateVerification() {
               textAlign: 'center',
               boxShadow: '0 16px 40px rgba(5, 150, 105, 0.2)'
             }}>
-              
+
               <div style={{
                 width: '80px',
                 height: '80px',
@@ -780,7 +780,7 @@ export default function GateVerification() {
               <span style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#059669' }}>
                 GATE ACCESS GRANTED
               </span>
-              
+
               <h2 style={{ fontSize: '1.9rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 16px', letterSpacing: '-0.02em' }}>
                 ✓ ENTRY ALLOWED
               </h2>
@@ -854,7 +854,7 @@ export default function GateVerification() {
               textAlign: 'center',
               boxShadow: '0 16px 40px rgba(220, 38, 38, 0.15)'
             }}>
-              
+
               <div style={{
                 width: '80px',
                 height: '80px',
@@ -872,7 +872,7 @@ export default function GateVerification() {
               <span style={{ fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#DC2626' }}>
                 CHECKPOINT REJECTION RECORDED
               </span>
-              
+
               <h2 style={{ fontSize: '1.9rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 16px' }}>
                 ✕ ENTRY DENIED
               </h2>
@@ -927,7 +927,7 @@ export default function GateVerification() {
               textAlign: 'center',
               boxShadow: '0 16px 40px rgba(220, 38, 38, 0.15)'
             }}>
-              
+
               <div style={{
                 width: '74px',
                 height: '74px',
@@ -984,7 +984,7 @@ export default function GateVerification() {
         {/* RIGHT COLUMN: LIVE QUEUE & QUICK VERIFICATION */}
         <div>
           <div className="glass-card" style={{ padding: 0, overflow: 'hidden', background: '#FFFFFF' }}>
-            
+
             {/* Header */}
             <div style={{ padding: '16px 20px', borderBottom: '1px solid #E2E8F0', background: '#FAFAFA', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1028,7 +1028,7 @@ export default function GateVerification() {
                 </div>
               ) : (
                 filteredGuests.map(guest => (
-                  <div 
+                  <div
                     key={guest.id}
                     style={{
                       padding: '12px 14px',
@@ -1048,15 +1048,15 @@ export default function GateVerification() {
                         <span style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.9rem' }}>
                           {guest.visitor_name}
                         </span>
-                        <span 
-                          className="mono" 
-                          style={{ 
-                            background: '#FFFBEB', 
-                            color: '#B45309', 
-                            border: '1px solid #FDE68A', 
-                            padding: '1px 7px', 
-                            borderRadius: '5px', 
-                            fontSize: '0.76rem', 
+                        <span
+                          className="mono"
+                          style={{
+                            background: '#FFFBEB',
+                            color: '#B45309',
+                            border: '1px solid #FDE68A',
+                            padding: '1px 7px',
+                            borderRadius: '5px',
+                            fontSize: '0.76rem',
                             fontWeight: 800,
                             letterSpacing: '0.04em'
                           }}
@@ -1064,7 +1064,7 @@ export default function GateVerification() {
                           {guest.entry_code}
                         </span>
                       </div>
-                      
+
                       <div style={{ fontSize: '0.76rem', color: '#64748B', marginTop: '2px' }}>
                         Host: <strong>{guest.host_name}</strong> • {guest.purpose}
                       </div>
@@ -1080,10 +1080,10 @@ export default function GateVerification() {
                       onClick={() => handleValidatePass(guest.entry_code, 'OTP_FALLBACK')}
                       disabled={loading}
                       className="btn btn-secondary btn-sm"
-                      style={{ 
-                        background: '#F0FDF4', 
-                        borderColor: '#BBF7D0', 
-                        color: '#166534', 
+                      style={{
+                        background: '#F0FDF4',
+                        borderColor: '#BBF7D0',
+                        color: '#166534',
                         fontWeight: 800,
                         padding: '6px 12px',
                         fontSize: '0.78rem',
@@ -1138,7 +1138,7 @@ export default function GateVerification() {
           padding: '16px'
         }}>
           <div className="glass-card" style={{ maxWidth: '440px', width: '100%', background: '#FFFFFF', borderRadius: '18px', overflow: 'hidden', padding: '24px' }}>
-            
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#FEF2F2', color: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <XCircle size={22} />
@@ -1211,7 +1211,7 @@ export default function GateVerification() {
               >
                 Cancel
               </button>
-              
+
               <button
                 onClick={handleDenyEntryConfirm}
                 disabled={processingAction}

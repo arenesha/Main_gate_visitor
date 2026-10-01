@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, UserPlus, Users, ShieldAlert, History, Building2 } from 'lucide-react';
+import { LayoutDashboard, UserPlus, Users, ShieldAlert, History, Building2, CreditCard, BarChart3, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Sidebar() {
@@ -30,6 +30,24 @@ export default function Sidebar() {
         >
           <LayoutDashboard size={18} />
           <span>Dashboard</span>
+        </NavLink>
+
+        <NavLink 
+          to="/booking" 
+          end
+          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+        >
+          <CreditCard size={18} />
+          <span>Student Booking</span>
+        </NavLink>
+
+        <NavLink 
+          to="/admin/slots" 
+          end
+          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+        >
+          <BarChart3 size={18} />
+          <span>Slot Analytics</span>
         </NavLink>
 
         <NavLink 

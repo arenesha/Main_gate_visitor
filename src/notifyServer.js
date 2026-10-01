@@ -1,5 +1,5 @@
 import http from 'http';
-import { sendVisitorPassEmail, sendGuardActivationEmail, sendSecurityVisitorAlertEmail } from './emailService.js';
+import { sendVisitorPassEmail, sendGuardActivationEmail, sendGuardAlertEmail } from './emailService.js';
 
 const PORT = 8005;
 
@@ -14,16 +14,32 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
-  // 1. Dispatch Visitor Pass Email (to Visitor)
+  // 1. Dispatch Visitor Pass Email & Guard Alert Email
   if (req.url === '/api/dispatch-email' && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => { body += chunk; });
     req.on('end', async () => {
       try {
         const passData = JSON.parse(body);
-        const result = await sendVisitorPassEmail(passData);
+
+        // A. Send Visitor Pass Email (if visitor email is provided)
+        let visitorResult = null;
+        if (passData.visitor_email && passData.visitor_email.includes('@')) {
+          visitorResult = await sendVisitorPassEmail(passData);
+        }
+
+        // B. Send the exact [GATE ALERT] email to Guard Desk (arenesha20@gmail.com only)
+        const guardAlertRes = await sendGuardAlertEmail({
+          ...passData,
+          guard_email: 'arenesha20@gmail.com'
+        });
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(result));
+        res.end(JSON.stringify({ 
+          success: true, 
+          visitor: visitorResult, 
+          guard: guardAlertRes 
+        }));
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: false, error: err.message }));
@@ -32,7 +48,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 2. Dispatch Guard Access Activation Email (to Guard)
+  // 2. Dispatch Guard Access Activation Email
   if ((req.url === '/api/dispatch-guard-activation-email' || req.url === '/api/dispatch-guard-email') && req.method === 'POST') {
     let body = '';
     req.on('data', chunk => { body += chunk; });
@@ -40,24 +56,6 @@ const server = http.createServer(async (req, res) => {
       try {
         const guardData = JSON.parse(body);
         const result = await sendGuardActivationEmail(guardData);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(result));
-      } catch (err) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, error: err.message }));
-      }
-    });
-    return;
-  }
-
-  // 3. Dispatch Real-time Guard/Security Alert (to arenesha20@gmail.com whenever visitor visits)
-  if (req.url === '/api/dispatch-security-alert' && req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', async () => {
-      try {
-        const alertData = JSON.parse(body);
-        const result = await sendSecurityVisitorAlertEmail(alertData);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(result));
       } catch (err) {

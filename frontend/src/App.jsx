@@ -8,6 +8,8 @@ import AdminInvitationList from './pages/AdminInvitationList';
 import PublicInvitationPass from './pages/PublicInvitationPass';
 import GateVerification from './pages/GateVerification';
 import VerificationHistory from './pages/VerificationHistory';
+import StudentSlotBooking from './pages/StudentSlotBooking';
+import AdminSlotAnalytics from './pages/AdminSlotAnalytics';
 
 export default function App() {
   const location = useLocation();
@@ -33,6 +35,8 @@ export default function App() {
         <main className="page-content">
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/booking" element={<StudentSlotBooking />} />
+            <Route path="/admin/slots" element={<AdminSlotAnalytics />} />
             <Route path="/admin/invitations/create" element={<AdminCreateInvitation />} />
             <Route path="/admin/invitations" element={<AdminInvitationList />} />
             <Route path="/gate" element={<GateVerification />} />

@@ -1,16 +1,18 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { ChevronRight, Shield, UserCheck, LogOut } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { ChevronRight } from 'lucide-react';
 
 export default function Header() {
   const location = useLocation();
-  const { user, logout } = useAuth();
 
   const getBreadcrumb = () => {
     switch (location.pathname) {
       case '/':
         return { section: 'Overview', title: 'Dashboard' };
+      case '/booking':
+        return { section: 'Booking', title: 'Student Slot Booking (Razorpay)' };
+      case '/admin/slots':
+        return { section: 'Analytics', title: 'Slot Bookings & Revenue' };
       case '/admin/invitations/create':
         return { section: 'Operations', title: 'Issue Visitor Pass' };
       case '/admin/invitations':
@@ -39,8 +41,6 @@ export default function Header() {
           </h2>
         </div>
       </div>
-
-      {/* Clean header without intrusive guard badge */}
     </header>
   );
 }

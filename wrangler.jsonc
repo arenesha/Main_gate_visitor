@@ -1,4 +1,4 @@
-﻿{
+{
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "main-gate-visitor-authorization",
   "main": "src/worker.js",
@@ -15,7 +15,7 @@
     {
       "binding": "DB",
       "database_name": "visitor-invitation-db",
-      "database_id": "6009d4b4-291f-4c23-b82f-2372de33428d",
+      "database_id": "local-d1-placeholder",
       "migrations_dir": "migrations"
     }
   ]

@@ -1,28 +1,20 @@
-import fs from 'fs';
-import path from 'path';
 import nodemailer from 'nodemailer';
 
-// Auto-load .env if present
 try {
-  const envPath = path.resolve(process.cwd(), '.env');
-  if (fs.existsSync(envPath)) {
-    const envContent = fs.readFileSync(envPath, 'utf8');
-    envContent.split(/\r?\n/).forEach(line => {
-      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
-      if (match && !process.env[match[1]]) {
-        process.env[match[1]] = match[2].trim().replace(/^['"]|['"]$/g, '');
-      }
-    });
+  if (typeof process !== 'undefined' && process.loadEnvFile) {
+    process.loadEnvFile();
   }
-} catch (e) {}
+} catch (e) {
+  // Ignore if .env is missing
+}
 
 const SMTP_CONFIG = {
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '587'),
   secure: false,
   auth: {
-    user: process.env.SMTP_USER || 'arenesha.reception@gmail.com',
-    pass: process.env.SMTP_PASS || process.env.SMTP_PASSWORD
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || ''
   }
 };
 
@@ -190,7 +182,7 @@ export async function sendVisitorPassEmail(passData) {
     };
     const info = await transporter.sendMail(mailOptions);
 
-    console.log(`[Email Dispatch] Pass email sent strictly to visitor ${targetRecipient} (MsgID: ${info.messageId})`);
+    console.log(`[Email Dispatch] Visitor Pass sent strictly to visitor ${targetRecipient} (MsgID: ${info.messageId})`);
     return { success: true, messageId: info.messageId, recipient: targetRecipient };
   } catch (err) {
     console.error('[Email Dispatch Error]', err);
@@ -216,7 +208,7 @@ export async function sendGuardActivationEmail(guardData) {
     name = 'AreneSHA Guard',
     email = 'arenesha20@gmail.com',
     location = 'B-Block, MEENAKSHI TECH PARK, 11th, Gachibowli, Hyderabad, Telangana 500032',
-    gate_url = 'http://localhost:5173/gate'
+    gate_url = 'http://localhost:8788/gate'
   } = guardData || {};
 
   const senderEmail = process.env.SMTP_USER || 'arenesha.reception@gmail.com';
@@ -339,7 +331,12 @@ export async function sendGuardActivationEmail(guardData) {
       replyTo: senderEmail,
       subject: `AreneSHA Guard Access Activated`,
       html: htmlContent,
-      text: plainText
+      text: plainText,
+      headers: {
+        'X-Priority': '1',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'high'
+      }
     };
     const info = await transporter.sendMail(mailOptions);
 
@@ -352,106 +349,105 @@ export async function sendGuardActivationEmail(guardData) {
 }
 
 /**
- * Sends real-time Guard/Security Alert email to arenesha20@gmail.com whenever a visitor visits
+ * Sends official [GATE ALERT] New Visitor Scheduled email to Guard
  */
-export async function sendSecurityVisitorAlertEmail(data) {
+export async function sendGuardAlertEmail(passData) {
   const {
-    id = 'INV-UNKNOWN',
-    visitor_name = 'Visitor',
-    visitor_phone = 'N/A',
-    visitor_email = 'N/A',
-    purpose = 'General Visit',
+    id = 'INV-XE2Q7K',
+    visitor_name = 'Priti M',
+    entry_code = '336650',
+    purpose = 'workspace',
     host_name = 'AreneSHA Workspace',
-    entry_code = 'N/A',
-    vehicle_number = 'None',
-    event_type = 'ENTRY_ALLOWED', // 'ENTRY_ALLOWED' or 'INVITATION_CREATED'
-    verified_by = 'Main Gate Security Officer',
-    time = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
-  } = data || {};
+    vehicle_number,
+    valid_from,
+    guard_email = 'arenesha20@gmail.com'
+  } = passData || {};
 
-  const securityRecipient = process.env.SECURITY_EMAIL || process.env.GUARD_EMAIL || 'arenesha20@gmail.com';
   const senderEmail = process.env.SMTP_USER || 'arenesha.reception@gmail.com';
-
-  const isEntry = event_type === 'ENTRY_ALLOWED';
-  const badgeColor = isEntry ? '#16A34A' : '#2563EB';
-  const title = isEntry ? 'VISITOR GATE CHECK-IN COMPLETED' : 'NEW VISITOR AUTHORIZATION SCHEDULED';
-  const subject = isEntry
-    ? `🔔 [GATE ALERT] Visitor Checked In: ${visitor_name} • Pass ${id}`
-    : `📋 [GATE ALERT] New Visitor Scheduled: ${visitor_name} • PIN ${entry_code}`;
+  const targetRecipient = guard_email.trim();
+  const hostDisplay = (host_name && host_name.trim().length > 0) ? host_name.trim() : 'AreneSHA Workspace';
+  const visitorDisplay = (visitor_name && visitor_name.trim().length > 0) ? visitor_name.trim() : 'Visitor';
+  const vehicleDisplay = (vehicle_number && vehicle_number.trim().length > 0) ? vehicle_number.trim() : 'None';
+  const timeDisplay = valid_from ? new Date(valid_from).toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }) : new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
 
   const htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="utf-8">
-      <title>${subject}</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>[GATE ALERT] New Visitor Scheduled: ${visitorDisplay} • PIN ${entry_code}</title>
     </head>
-    <body style="margin: 0; padding: 18px 8px; background-color: #0F172A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <body style="margin: 0; padding: 20px 10px; background-color: #0F172A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
       
-      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 480px; margin: 0 auto; background-color: #1E293B; border-radius: 16px; overflow: hidden; border: 1.5px solid #334155; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 480px; margin: 0 auto; background-color: #FFFFFF; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.25);">
         
         <!-- HEADER -->
         <tr>
-          <td align="center" style="padding: 22px 20px 16px 20px; background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%); border-bottom: 1px solid #334155;">
-            <div style="font-size: 11px; font-weight: 800; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px;">
-              🏢 AreneSHA Intelligent Security Checkpoint
+          <td style="padding: 24px 28px 18px 28px; background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); color: #FFFFFF;">
+            <div style="font-size: 11px; font-weight: 800; color: #38BDF8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">
+              AreneSHA Intelligent Security Checkpoint
             </div>
-            <div style="display: inline-block; background-color: ${badgeColor}; color: #FFFFFF; font-size: 11.5px; font-weight: 800; padding: 4px 14px; border-radius: 9999px; letter-spacing: 0.05em;">
-              ${title}
+            <h1 style="font-size: 18px; font-weight: 900; margin: 0 0 6px 0; color: #FFFFFF; letter-spacing: -0.01em;">
+              NEW VISITOR AUTHORIZATION SCHEDULED
+            </h1>
+            <div style="font-size: 12px; color: #94A3B8;">
+              Security Notice for Guard (<span style="color: #38BDF8;">${targetRecipient}</span>):
             </div>
           </td>
         </tr>
 
-        <!-- DETAILS CARD -->
+        <!-- DETAILS BODY -->
         <tr>
-          <td style="padding: 20px 22px;">
-            <div style="font-size: 15px; color: #E2E8F0; font-weight: 700; margin-bottom: 14px;">
-              Security Notice for Guard (${securityRecipient}):
-            </div>
-
-            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #0F172A; border-radius: 12px; border: 1px solid #334155; margin-bottom: 18px;">
+          <td style="padding: 24px 28px;">
+            
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 13.5px; border-collapse: separate; border-spacing: 0 8px;">
               <tr>
-                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #94A3B8; font-size: 13px; width: 38%;"><strong>Visitor Name:</strong></td>
-                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #F8FAFC; font-size: 13.5px; font-weight: 700;">${visitor_name}</td>
+                <td style="color: #64748B; font-weight: 600; width: 130px;">Visitor Name:</td>
+                <td style="color: #0F172A; font-weight: 800; font-size: 15px;">${visitorDisplay}</td>
               </tr>
               <tr>
-                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #94A3B8; font-size: 13px;"><strong>Pass ID:</strong></td>
-                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #38BDF8; font-family: monospace; font-size: 14px; font-weight: 700;">${id}</td>
+                <td style="color: #64748B; font-weight: 600;">Pass ID:</td>
+                <td style="color: #0284C7; font-weight: 800; font-family: monospace; font-size: 14px;">${id}</td>
               </tr>
               <tr>
-                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #94A3B8; font-size: 13px;"><strong>Entry PIN:</strong></td>
-                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #F59E0B; font-family: monospace; font-size: 15px; font-weight: 800;">${entry_code}</td>
+                <td style="color: #64748B; font-weight: 600;">Entry PIN:</td>
+                <td style="color: #059669; font-weight: 900; font-size: 16px; letter-spacing: 0.05em;">${entry_code}</td>
               </tr>
               <tr>
-                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #94A3B8; font-size: 13px;"><strong>Purpose:</strong></td>
-                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #F8FAFC; font-size: 13px;">${purpose}</td>
+                <td style="color: #64748B; font-weight: 600;">Purpose:</td>
+                <td style="color: #0F172A; font-weight: 700;">${purpose}</td>
               </tr>
               <tr>
-                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #94A3B8; font-size: 13px;"><strong>Host:</strong></td>
-                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #CBD5E1; font-size: 13px;">${host_name}</td>
+                <td style="color: #64748B; font-weight: 600;">Host:</td>
+                <td style="color: #0F172A; font-weight: 700;">${hostDisplay}</td>
               </tr>
               <tr>
-                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #94A3B8; font-size: 13px;"><strong>Vehicle:</strong></td>
-                <td style="padding: 10px 14px; border-bottom: 1px solid #1E293B; color: #CBD5E1; font-size: 13px;">${vehicle_number || 'None'}</td>
+                <td style="color: #64748B; font-weight: 600;">Vehicle:</td>
+                <td style="color: #475569; font-weight: 600;">${vehicleDisplay}</td>
               </tr>
               <tr>
-                <td style="padding: 10px 14px; color: #94A3B8; font-size: 13px;"><strong>Time:</strong></td>
-                <td style="padding: 10px 14px; color: #CBD5E1; font-size: 12.5px;">${time}</td>
+                <td style="color: #64748B; font-weight: 600;">Time:</td>
+                <td style="color: #475569; font-weight: 600;">${timeDisplay}</td>
               </tr>
             </table>
 
-            <div align="center" style="margin: 16px 0 10px 0;">
-              <a href="http://localhost:5173/gate" target="_blank" style="background-color: #2563EB; color: #FFFFFF; font-size: 13px; font-weight: 700; text-decoration: none; padding: 10px 24px; border-radius: 8px; display: inline-block;">
+            <!-- BUTTON -->
+            <div align="center" style="margin: 26px 0 16px 0; text-align: center;">
+              <a href="http://localhost:5173/gate" target="_blank" style="background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%); color: #FFFFFF; font-size: 13.5px; font-weight: 800; text-decoration: none; padding: 13px 32px; border-radius: 10px; display: inline-block; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35); letter-spacing: 0.04em;">
                 OPEN GUARD SECURITY PORTAL
               </a>
             </div>
+
           </td>
         </tr>
 
         <!-- FOOTER -->
         <tr>
-          <td align="center" style="padding: 12px 20px; background-color: #0F172A; border-top: 1px solid #334155; color: #64748B; font-size: 11px;">
-            AreneSHA Security Systems • Automated Dispatch to ${securityRecipient}
+          <td align="center" style="padding: 14px 24px; background-color: #F8FAFC; border-top: 1px solid #E2E8F0; text-align: center;">
+            <div style="font-size: 11px; color: #64748B;">
+              AreneSHA Security Systems • Automated Dispatch to <strong style="color: #0F172A;">${targetRecipient}</strong>
+            </div>
           </td>
         </tr>
 
@@ -461,21 +457,26 @@ export async function sendSecurityVisitorAlertEmail(data) {
     </html>
   `;
 
-  const plainText = `[GATE SECURITY ALERT]\n${title}\n\nVisitor: ${visitor_name}\nPass ID: ${id}\nPIN: ${entry_code}\nPurpose: ${purpose}\nHost: ${host_name}\nVehicle: ${vehicle_number || 'None'}\nTime: ${time}\n\nAutomated Security Dispatch to ${securityRecipient}`;
+  const plainText = `AreneSHA Intelligent Security Checkpoint\nNEW VISITOR AUTHORIZATION SCHEDULED\nSecurity Notice for Guard (${targetRecipient}):\n\nVisitor Name: ${visitorDisplay}\nPass ID: ${id}\nEntry PIN: ${entry_code}\nPurpose: ${purpose}\nHost: ${hostDisplay}\nVehicle: ${vehicleDisplay}\nTime: ${timeDisplay}\n\nOPEN GUARD SECURITY PORTAL: http://localhost:5173/gate\n\nAreneSHA Security Systems • Automated Dispatch to ${targetRecipient}`;
 
   try {
     const mailOptions = {
       from: `"AreneSHA Security Alert" <${senderEmail}>`,
-      to: securityRecipient,
-      subject,
+      to: targetRecipient,
+      subject: `[GATE ALERT] New Visitor Scheduled: ${visitorDisplay} • PIN ${entry_code}`,
       html: htmlContent,
-      text: plainText
+      text: plainText,
+      headers: {
+        'X-Priority': '1',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'high'
+      }
     };
     const info = await transporter.sendMail(mailOptions);
-    console.log(`[Email Dispatch] Security visitor alert email sent to ${securityRecipient} (MsgID: ${info.messageId})`);
-    return { success: true, messageId: info.messageId, recipient: securityRecipient };
+    console.log(`[Email Dispatch] Guard Alert sent to ${targetRecipient} (MsgID: ${info.messageId})`);
+    return { success: true, messageId: info.messageId, recipient: targetRecipient };
   } catch (err) {
-    console.error('[Email Dispatch Error - Security Visitor Alert]', err);
+    console.error('[Email Dispatch Error - Guard Alert]', err);
     return { success: false, error: err.message };
   }
 }
