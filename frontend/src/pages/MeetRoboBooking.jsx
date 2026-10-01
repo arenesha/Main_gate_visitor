@@ -7,7 +7,7 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import { RAZORPAY_PAYMENT_URL, RAZORPAY_BENEFICIARY_NAME, RAZORPAY_HANDLE, MERCHANT_UPI_ID } from '../utils/paymentConfig';
 import { useAuth } from '../context/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import LoginModal from '../components/LoginModal';
 
 const BASE_PRICE = 500;
@@ -15,10 +15,20 @@ const BASE_PRICE = 500;
 export default function MeetRoboBooking() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const slotSectionRef = useRef(null);
 
+  const isDirectBooking = location.pathname === '/booking' || location.search.includes('signup=true');
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [showSlots, setShowSlots] = useState(false);
+  const [showSlots, setShowSlots] = useState(() => isDirectBooking);
+
+  useEffect(() => {
+    if (isDirectBooking && slotSectionRef.current) {
+      setTimeout(() => {
+        slotSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    }
+  }, [isDirectBooking]);
 
   const [selectedDate, setSelectedDate] = useState(() => {
     // Event date is Fri 2 Oct 2026 or today
@@ -81,9 +91,15 @@ export default function MeetRoboBooking() {
       const res = await fetch(`/api/booking/slots?date=${date}`);
       const data = await res.json();
       if (data.success) {
-        setSlots(data.slots || []);
+        const loadedSlots = data.slots || [];
+        setSlots(loadedSlots);
         if (data.razorpay_key_id) {
           setRazorpayKeyId(data.razorpay_key_id);
+        }
+        // Auto-select first available slot immediately so a slot is always ready
+        const firstAvailable = loadedSlots.find(s => !s.is_full && s.booked_count < s.max_capacity);
+        if (firstAvailable) {
+          setSelectedSlotIds([firstAvailable.id]);
         }
       } else {
         setPaymentError(data.error || 'Failed to load time slots.');
@@ -98,7 +114,6 @@ export default function MeetRoboBooking() {
   useEffect(() => {
     if (selectedDate) {
       fetchSlots(selectedDate);
-      setSelectedSlotIds([]);
     }
   }, [selectedDate]);
 
@@ -128,23 +143,28 @@ export default function MeetRoboBooking() {
 
   const selectedSlotsList = slots.filter(s => selectedSlotIds.includes(s.id));
 
-  // Scroll to slot booking when user clicks "SIGN UP ->" on the Meet Robo hero
+  // Open slot booking in new tab when clicking "SIGN UP ->" on the Meet Robo hero
   const handleSignUpClick = () => {
+    window.open('/booking', '_blank');
     setShowSlots(true);
-    setTimeout(() => {
-      if (slotSectionRef.current) {
-        slotSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
   };
 
   // Handle Checkout initiation
   const handleInitiatePayment = async (e) => {
     e.preventDefault();
-    if (slotsCount === 0) {
-      setPaymentError('Please select at least one 15-minute robot interaction slot.');
-      return;
+
+    let currentSlotIds = selectedSlotIds;
+    if (currentSlotIds.length === 0) {
+      const firstAvailable = slots.find(s => !s.is_full && s.booked_count < s.max_capacity);
+      if (firstAvailable) {
+        currentSlotIds = [firstAvailable.id];
+        setSelectedSlotIds([firstAvailable.id]);
+      } else {
+        setPaymentError('All slots are currently booked for this date. Please pick another date.');
+        return;
+      }
     }
+
     if (!studentName.trim()) {
       setPaymentError('Please enter your full name.');
       return;
@@ -166,7 +186,7 @@ export default function MeetRoboBooking() {
           student_name: studentName.trim(),
           student_email: studentEmail.trim().toLowerCase(),
           student_phone: studentPhone.trim() || null,
-          slot_ids: selectedSlotIds,
+          slot_ids: currentSlotIds,
           slot_date: selectedDate,
           college: collegeName.trim() || 'AreneSHA AI Summit Attendee'
         })
@@ -522,14 +542,14 @@ export default function MeetRoboBooking() {
                 justifyContent: 'center'
               }}>
                 <img 
-                  src="/meet-robo-hero.png" 
-                  alt="Humanoid Robot Chief Guest - AI Education Summit" 
+                  src="/robo-only.png" 
+                  alt="Chief Guest: Humanoid Robot - AI Education Summit" 
                   style={{
                     width: '100%',
+                    maxWidth: '430px',
                     height: 'auto',
                     objectFit: 'contain',
-                    borderRadius: '16px',
-                    mixBlendMode: 'multiply'
+                    display: 'block'
                   }}
                 />
               </div>
@@ -790,6 +810,32 @@ export default function MeetRoboBooking() {
                 <span>{paymentError}</span>
               </div>
             )}
+            {/* Selected Slot Confirmation Banner */}
+            <div style={{
+              background: '#EEF2FF',
+              border: '1px solid #C7D2FE',
+              borderRadius: '12px',
+              padding: '10px 14px',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Clock size={16} color="#4F46E5" />
+                <div>
+                  <span style={{ fontSize: '0.72rem', color: '#4338CA', fontWeight: 800, textTransform: 'uppercase', display: 'block' }}>
+                    Active Time Slot
+                  </span>
+                  <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#1E1B4B' }}>
+                    {selectedSlotsList.length > 0 ? selectedSlotsList.map(s => `${s.start_time} - ${s.end_time}`).join(', ') : 'Auto-selecting slot...'}
+                  </span>
+                </div>
+              </div>
+              <span style={{ fontSize: '0.74rem', background: '#4F46E5', color: '#FFFFFF', padding: '3px 8px', borderRadius: '6px', fontWeight: 800 }}>
+                {slotsCount || 1} Slot{slotsCount > 1 ? 's' : ''}
+              </span>
+            </div>
 
             <form onSubmit={handleInitiatePayment}>
               {/* Student Name */}
