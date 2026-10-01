@@ -255,12 +255,56 @@ export default function MeetRoboBooking() {
   const handleCloseModal = () => {
     setConfirmedBooking(null);
     setShowSlots(true);
-    if (location.pathname !== '/booking') {
-      navigate('/booking');
-    }
+    const targetUrl = window.location.host.includes('8788')
+      ? `${window.location.protocol}//${window.location.host}/booking`
+      : (window.location.host.includes('5173') ? `${window.location.protocol}//${window.location.host}/booking` : 'http://127.0.0.1:8788/booking');
+    window.location.href = targetUrl;
+  };
+
+  // Direct download gate pass and redirect to booking page
+  const handleDownloadAndRedirect = () => {
+    if (!confirmedBooking) return;
+
+    const passContent = `=======================================================
+       ARENESHA AI EDUCATION SUMMIT 2026
+             GATE PASS & WORKSHOP RECEIPT
+=======================================================
+
+Student Name : ${confirmedBooking.student_name}
+Session Time : ${confirmedBooking.slots_display || '15-min Workshop'}
+Pass Status  : CONFIRMED & APPROVED
+Event Date   : ${confirmedBooking.slot_date || '02/10/2026'}
+Venue        : AreneSHA Lab, Meenakshi Tech Park, Gachibowli, Hyderabad
+
+-------------------------------------------------------
+Instructions:
+1. Please carry this pass receipt (digital or printed).
+2. Report at Main Gate 10 minutes prior to session time.
+3. Show this receipt at the registration desk for badge.
+=======================================================
+Issued At: ${new Date().toLocaleString()}
+`;
+
+    const blob = new Blob([passContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const safeName = (confirmedBooking.student_name || 'Visitor').replace(/[^a-zA-Z0-9]/g, '_');
+    link.download = `AreneSHA_Gate_Pass_${safeName}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setConfirmedBooking(null);
+    setShowSlots(true);
+
     setTimeout(() => {
-      slotSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 150);
+      const targetUrl = window.location.host.includes('8788')
+        ? `${window.location.protocol}//${window.location.host}/booking`
+        : (window.location.host.includes('5173') ? `${window.location.protocol}//${window.location.host}/booking` : 'http://127.0.0.1:8788/booking');
+      window.location.href = targetUrl;
+    }, 300);
   };
 
   // Manual payment reference confirmation
@@ -1141,52 +1185,29 @@ export default function MeetRoboBooking() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div>
               <button
-                onClick={() => {
-                  window.print();
-                }}
+                onClick={handleDownloadAndRedirect}
                 style={{
                   width: '100%',
-                  background: '#0F172A',
+                  background: '#059669',
                   color: '#FFFFFF',
                   border: 'none',
-                  borderRadius: '10px',
-                  padding: '12px',
-                  fontSize: '0.9rem',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}
-              >
-                <Download size={16} />
-                <span>Print / Download Gate Pass Receipt</span>
-              </button>
-
-              <button
-                onClick={handleCloseModal}
-                style={{
-                  width: '100%',
-                  background: '#4F46E5',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '12px',
-                  fontSize: '0.9rem',
+                  borderRadius: '12px',
+                  padding: '14px',
+                  fontSize: '0.96rem',
                   fontWeight: 800,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 4px 14px rgba(79, 70, 229, 0.3)'
+                  boxShadow: '0 4px 14px rgba(5, 150, 105, 0.35)',
+                  transition: 'all 0.2s ease'
                 }}
               >
-                <Clock size={16} />
-                <span>Open Slots Page</span>
+                <Download size={18} />
+                <span>Download Gate Pass Receipt</span>
               </button>
             </div>
           </div>
