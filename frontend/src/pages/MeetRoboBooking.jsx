@@ -50,6 +50,7 @@ export default function MeetRoboBooking() {
   const [paymentError, setPaymentError] = useState(null);
   const [paymentCancelled, setPaymentCancelled] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState(null);
+  const [downloadingPass, setDownloadingPass] = useState(false);
 
   const [activeCheckout, setActiveCheckout] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('UPI');
@@ -264,6 +265,7 @@ export default function MeetRoboBooking() {
   // Direct download gate pass and redirect to booking page
   const handleDownloadAndRedirect = () => {
     if (!confirmedBooking) return;
+    setDownloadingPass(true);
 
     const passContent = `=======================================================
        ARENESHA AI EDUCATION SUMMIT 2026
@@ -290,21 +292,21 @@ Issued At: ${new Date().toLocaleString()}
     const link = document.createElement('a');
     link.href = url;
     const safeName = (confirmedBooking.student_name || 'Visitor').replace(/[^a-zA-Z0-9]/g, '_');
-    link.download = `AreneSHA_Gate_Pass_${safeName}.txt`;
+    link.download = `Gate_Pass_${safeName}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    setConfirmedBooking(null);
-    setShowSlots(true);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 
     setTimeout(() => {
+      setConfirmedBooking(null);
+      setDownloadingPass(false);
+      setShowSlots(true);
       const targetUrl = window.location.host.includes('8788')
         ? `${window.location.protocol}//${window.location.host}/booking`
         : (window.location.host.includes('5173') ? `${window.location.protocol}//${window.location.host}/booking` : 'http://127.0.0.1:8788/booking');
       window.location.href = targetUrl;
-    }, 300);
+    }, 1200);
   };
 
   // Manual payment reference confirmation
@@ -1187,7 +1189,9 @@ Issued At: ${new Date().toLocaleString()}
 
             <div>
               <button
+                type="button"
                 onClick={handleDownloadAndRedirect}
+                disabled={downloadingPass}
                 style={{
                   width: '100%',
                   background: '#059669',
@@ -1195,19 +1199,20 @@ Issued At: ${new Date().toLocaleString()}
                   border: 'none',
                   borderRadius: '12px',
                   padding: '14px',
-                  fontSize: '0.96rem',
+                  fontSize: '1rem',
                   fontWeight: 800,
-                  cursor: 'pointer',
+                  cursor: downloadingPass ? 'wait' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
                   boxShadow: '0 4px 14px rgba(5, 150, 105, 0.35)',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  opacity: downloadingPass ? 0.8 : 1
                 }}
               >
                 <Download size={18} />
-                <span>Download Gate Pass Receipt</span>
+                <span>{downloadingPass ? 'Downloading...' : 'Download'}</span>
               </button>
             </div>
           </div>
