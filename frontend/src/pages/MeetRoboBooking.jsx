@@ -8,7 +8,6 @@ import { QRCodeSVG } from 'qrcode.react';
 import { RAZORPAY_PAYMENT_URL, RAZORPAY_BENEFICIARY_NAME, RAZORPAY_HANDLE, MERCHANT_UPI_ID } from '../utils/paymentConfig';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import LoginModal from '../components/LoginModal';
 
 const BASE_PRICE = 500;
 
@@ -19,8 +18,6 @@ export default function MeetRoboBooking() {
   const slotSectionRef = useRef(null);
 
   const isDirectBooking = location.pathname === '/booking' || location.search.includes('signup=true');
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [showSlots, setShowSlots] = useState(() => isDirectBooking);
 
   useEffect(() => {
     if (isDirectBooking && slotSectionRef.current) {
@@ -367,212 +364,103 @@ export default function MeetRoboBooking() {
             </div>
           </div>
 
-          {/* Right Action: Guard / Admin Portal Access */}
+          {/* Right Action: Clean Logout button ONLY if user is logged in, NO login button on public UI */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {user ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.82rem', background: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', padding: '4px 10px', borderRadius: '8px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <ShieldCheck size={14} /> Guard: {user.email}
-                </span>
-                <button
-                  onClick={() => navigate('/admin/dashboard')}
-                  style={{
-                    background: '#0F172A',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    padding: '8px 14px',
-                    borderRadius: '8px',
-                    fontSize: '0.84rem',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                >
-                  Open Guard Portal
-                </button>
-                <button
-                  onClick={logout}
-                  style={{
-                    background: '#F1F5F9',
-                    color: '#475569',
-                    border: '1px solid #CBD5E1',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    fontSize: '0.84rem',
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
+            {user && (
               <button
-                onClick={() => setIsLoginModalOpen(true)}
+                onClick={logout}
                 style={{
-                  background: '#0F172A',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  padding: '9px 16px',
-                  borderRadius: '10px',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '7px',
-                  boxShadow: '0 2px 8px rgba(15, 23, 42, 0.15)',
-                  transition: 'all 0.2s'
+                  background: '#F1F5F9',
+                  color: '#475569',
+                  border: '1px solid #CBD5E1',
+                  padding: '7px 14px',
+                  borderRadius: '8px',
+                  fontSize: '0.84rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
                 }}
               >
-                <Lock size={14} color="#B6FF1B" />
-                <span>Guard / Admin Login</span>
+                Logout
               </button>
             )}
           </div>
         </div>
       </header>
 
-      {/* 2. HERO BANNER: EXACT REPLICA OF THE SECOND IMAGE (MEET ROBO / AI EDUCATION SUMMIT) */}
-      <section style={{ maxWidth: '1200px', margin: '24px auto', padding: '0 16px' }}>
-        <div style={{
-          background: '#B9FF14',
-          borderRadius: '24px',
-          overflow: 'hidden',
-          boxShadow: '0 15px 35px -5px rgba(185, 255, 20, 0.35)',
-          position: 'relative'
-        }}>
-          
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(320px, 1.25fr) minmax(280px, 1fr)',
-            alignItems: 'center',
-            minHeight: '460px',
-            padding: '36px 42px',
-            gap: '24px'
-          }}>
-            
-            {/* Left Content Column */}
-            <div style={{ zIndex: 2 }}>
-              
-              {/* Event Meta Header */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '32px',
-                maxWidth: '480px',
-                fontSize: '0.82rem',
-                fontWeight: 800,
-                color: '#111827',
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase'
-              }}>
-                <span>FEATURED · FULL-DAY EVENT</span>
-                <span>FRI 2 OCT 2026</span>
-              </div>
-
-              {/* Main Headline */}
-              <h1 style={{
-                fontSize: 'clamp(2.4rem, 4.5vw, 3.6rem)',
-                fontWeight: 900,
-                color: '#0A0A0A',
-                margin: '0 0 18px 0',
-                letterSpacing: '-0.03em',
-                lineHeight: 1.05
-              }}>
-                AI Education Summit
-              </h1>
-
-              {/* Description */}
-              <p style={{
-                fontSize: 'clamp(1rem, 1.4vw, 1.15rem)',
-                color: '#1F2937',
-                maxWidth: '520px',
-                lineHeight: 1.5,
-                margin: '0 0 32px 0',
-                fontWeight: 500
-              }}>
-                Learn with purpose. Build for impact. Chief Guest: a Humanoid Robot. Three workshops, Meet the Robots, and the AI Hackathon with a ₹1 Lakh prize pool. Invite only.
-              </p>
-
-              {/* Interactive Sign Up Button */}
-              <div>
-                <button
-                  type="button"
-                  onClick={handleSignUpClick}
-                  style={{
-                    background: '#050505',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    padding: '15px 32px',
-                    fontSize: '0.94rem',
-                    fontWeight: 800,
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    borderRadius: '4px',
-                    boxShadow: '0 8px 20px rgba(0,0,0,0.25)',
-                    transition: 'transform 0.2s, background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.background = '#1F2937'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = '#050505'; }}
-                >
-                  <span>SIGN UP</span>
-                  <ArrowRight size={17} />
-                </button>
-              </div>
-
-            </div>
-
-            {/* Right Side: Humanoid Robot Illustration */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative'
-            }}>
-              <div style={{
-                position: 'relative',
+      {/* 2. MAIN PAGE (/): EXACT SECOND IMAGE WITH 0% CHANGE */}
+      {!isDirectBooking && (
+        <section style={{ maxWidth: '1040px', margin: '36px auto 60px', padding: '0 16px' }}>
+          <div 
+            onClick={handleSignUpClick}
+            style={{
+              position: 'relative',
+              borderRadius: '24px',
+              overflow: 'hidden',
+              boxShadow: '0 20px 45px rgba(0, 0, 0, 0.15)',
+              cursor: 'pointer',
+              transition: 'transform 0.2s, box-shadow 0.2s'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 24px 50px rgba(0, 0, 0, 0.2)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 20px 45px rgba(0, 0, 0, 0.15)'; }}
+          >
+            <img 
+              src="/ai-education-summit-banner.png" 
+              alt="AI Education Summit - Meet Robo" 
+              style={{
                 width: '100%',
-                maxWidth: '460px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <img 
-                  src="/robo-only.png" 
-                  alt="Chief Guest: Humanoid Robot - AI Education Summit" 
-                  style={{
-                    width: '100%',
-                    maxWidth: '430px',
-                    height: 'auto',
-                    objectFit: 'contain',
-                    display: 'block'
-                  }}
-                />
-              </div>
-            </div>
+                height: 'auto',
+                display: 'block'
+              }}
+            />
+            {/* Transparent clickable hotspot directly matching SIGN UP button in the image */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSignUpClick();
+              }}
+              title="Open 15-Minute Robot Slot Booking in New Tab"
+              style={{
+                position: 'absolute',
+                left: '6.2%',
+                bottom: '10.5%',
+                width: '16.5%',
+                height: '11.5%',
+                opacity: 0,
+                cursor: 'pointer',
+                border: 'none',
+                background: 'transparent'
+              }}
+            />
+          </div>
+        </section>
+      )}
 
+      {/* 3. WORKING SLOT BOOKING CODE (SHOWN ON /booking IN NEW TAB) */}
+      {isDirectBooking && (
+        <>
+          <div style={{ maxWidth: '1200px', margin: '20px auto 0', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Link 
+              to="/" 
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#4F46E5', fontWeight: 700, fontSize: '0.88rem', textDecoration: 'none' }}
+            >
+              <span>← Back to AI Education Summit</span>
+            </Link>
+            <span style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600 }}>
+              Official Robot Interaction Reservation
+            </span>
           </div>
 
-
-        </div>
-      </section>
-
-      {/* 3. WORKING SLOT BOOKING CODE (REVEALED WHEN SIGN UP IS CLICKED) */}
-      <section 
-        id="slot-booking-section"
-        ref={slotSectionRef}
-        style={{
-          maxWidth: '1200px',
-          margin: '32px auto 48px',
-          padding: '0 16px',
-          display: showSlots ? 'block' : 'none'
-        }}
-      >
+          <section 
+            id="slot-booking-section"
+            ref={slotSectionRef}
+            style={{
+              maxWidth: '1200px',
+              margin: '20px auto 48px',
+              padding: '0 16px',
+              display: 'block'
+            }}
+          >
         {/* Section Header */}
         <div style={{
           background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
@@ -942,6 +830,8 @@ export default function MeetRoboBooking() {
 
         </div>
       </section>
+      </>
+      )}
 
       {/* 4. RAZORPAY / UPI CHECKOUT MODAL */}
       {activeCheckout && (
@@ -1195,12 +1085,7 @@ export default function MeetRoboBooking() {
         </div>
       )}
 
-      {/* 6. LOGIN MODAL */}
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        targetRoute="/admin/dashboard"
-      />
+
 
     </div>
   );

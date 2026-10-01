@@ -18,7 +18,13 @@ export default function App() {
   const { user } = useAuth();
 
   const isPublicPass = location.pathname.startsWith('/invitation/');
+  const isLogout = location.pathname === '/logout';
   const isMeetRoboPage = location.pathname === '/' || location.pathname === '/booking' || location.pathname === '/meet-robo';
+
+  if (isLogout) {
+    logout();
+    return <Navigate to="/" replace />;
+  }
 
   // 1. If viewing standalone public visitor pass
   if (isPublicPass) {
