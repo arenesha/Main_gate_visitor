@@ -177,6 +177,8 @@ export default function MeetRoboBooking() {
         throw new Error(orderData.error || 'Unable to reserve time slots.');
       }
 
+      const razorpayUrl = 'https://razorpay.me/@edifynuvaaitechnologiesprivat';
+
       setActiveCheckout({
         bookingId: orderData.booking_id,
         orderId: orderData.order_id,
@@ -194,8 +196,15 @@ export default function MeetRoboBooking() {
         slots: selectedSlotsList,
         slotDate: selectedDate,
         upiIntentUrl: orderData.upi_intent_url || `upi://pay?pa=${MERCHANT_UPI_ID}&pn=${encodeURIComponent(RAZORPAY_BENEFICIARY_NAME)}&am=${totalPayable}.00&cu=INR&tn=${encodeURIComponent(`AreneSHA Robo Slot ${orderData.booking_id}`)}`,
-        customPaymentUrl: orderData.custom_payment_url || RAZORPAY_PAYMENT_URL
+        customPaymentUrl: razorpayUrl
       });
+
+      // Automatically open Razorpay payment page in a new window/tab after submitting form
+      try {
+        window.open(razorpayUrl, '_blank', 'noopener,noreferrer');
+      } catch (e) {
+        console.warn('Popup blocked, available via button in modal', e);
+      }
 
     } catch (err) {
       setPaymentError(err.message || 'Payment initiation failed.');
@@ -965,25 +974,64 @@ export default function MeetRoboBooking() {
             </div>
 
             {/* Pay Via Razorpay Direct Link Button */}
-            <a
-              href={activeCheckout.customPaymentUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'block',
-                textAlign: 'center',
-                background: '#0F172A',
-                color: '#B6FF1B',
-                textDecoration: 'none',
-                padding: '12px',
-                borderRadius: '10px',
-                fontSize: '0.9rem',
-                fontWeight: 800,
-                marginBottom: '14px'
-              }}
-            >
-              Open Direct Razorpay Gateway →
-            </a>
+            <div style={{ marginBottom: '16px' }}>
+              <a
+                href={activeCheckout.customPaymentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+                  color: '#FFFFFF',
+                  textDecoration: 'none',
+                  padding: '13px 18px',
+                  borderRadius: '12px',
+                  fontSize: '0.92rem',
+                  fontWeight: 800,
+                  boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <span>Pay ₹{activeCheckout.totalPayable}.00 on Razorpay</span>
+                <ExternalLink size={16} />
+              </a>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: '#F0F9FF',
+                border: '1px solid #BAE6FD',
+                borderRadius: '8px',
+                padding: '6px 10px',
+                marginTop: '8px',
+                fontSize: '0.74rem'
+              }}>
+                <span className="mono" style={{ color: '#0369A1', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '280px' }}>
+                  https://razorpay.me/@edifynuvaaitechnologiesprivat
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: copiedLink ? '#16A34A' : '#0284C7',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px'
+                  }}
+                >
+                  {copiedLink ? <Check size={12} /> : <Copy size={12} />}
+                  <span>{copiedLink ? 'Copied!' : 'Copy'}</span>
+                </button>
+              </div>
+            </div>
 
             {/* Reference Input for Confirmation */}
             <div style={{ marginBottom: '14px' }}>
