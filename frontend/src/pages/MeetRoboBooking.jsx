@@ -187,6 +187,7 @@ export default function MeetRoboBooking() {
           student_email: studentEmail.trim().toLowerCase(),
           student_phone: studentPhone.trim() || null,
           slot_ids: currentSlotIds,
+          date: selectedDate,
           slot_date: selectedDate,
           college: collegeName.trim() || 'AreneSHA AI Summit Attendee'
         })
@@ -557,31 +558,6 @@ export default function MeetRoboBooking() {
 
           </div>
 
-          {/* Quick Click-to-Book Teaser Footer */}
-          <div 
-            onClick={handleSignUpClick}
-            style={{
-              background: 'rgba(0, 0, 0, 0.08)',
-              borderTop: '1px solid rgba(0, 0, 0, 0.08)',
-              padding: '12px 32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              cursor: 'pointer',
-              fontSize: '0.86rem',
-              fontWeight: 700,
-              color: '#0A0A0A'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={16} />
-              <span>15-Minute Robot Interaction & Workshop Slots Available Today • ₹500 Base + ₹90 GST = ₹590 Total</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'underline' }}>
-              <span>{showSlots ? 'Slot Booking Open Below' : 'Click to View Available Slots'}</span>
-              <ChevronDown size={16} style={{ transform: showSlots ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-            </div>
-          </div>
 
         </div>
       </section>

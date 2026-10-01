@@ -127,9 +127,16 @@ export default function StudentSlotBooking() {
   // Handle Checkout initiation
   const handleInitiatePayment = async (e) => {
     e.preventDefault();
-    if (slotsCount === 0) {
-      setPaymentError('Please select at least one time slot.');
-      return;
+    let currentSlotIds = selectedSlotIds;
+    if (currentSlotIds.length === 0) {
+      const firstAvailable = slots.find(s => !s.is_full && s.booked_count < s.max_capacity);
+      if (firstAvailable) {
+        currentSlotIds = [firstAvailable.id];
+        setSelectedSlotIds([firstAvailable.id]);
+      } else {
+        setPaymentError('All slots are currently booked for this date. Please choose another date.');
+        return;
+      }
     }
     if (!studentName.trim()) {
       setPaymentError('Please enter the student name.');

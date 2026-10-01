@@ -256,26 +256,32 @@ export async function handleBookingRoutes(request, path, url, db, env, corsHeade
   if (path === '/api/booking/create-order' && request.method === 'POST') {
     try {
       const body = await request.json();
-      const {
-        date,
-        slot_ids = [],
-        student_name = 'Student',
-        student_email = '',
-        student_phone = ''
-      } = body;
-
-      if (!date || !Array.isArray(slot_ids) || slot_ids.length === 0) {
-        return jsonRes({ success: false, error: 'Please select at least one time slot.' }, 400);
-      }
+      const date = (body.date || body.slot_date || new Date().toISOString().split('T')[0]).trim();
+      let slot_ids = Array.isArray(body.slot_ids) ? body.slot_ids : [];
+      const student_name = body.student_name || 'Student';
+      const student_email = body.student_email || '';
+      const student_phone = body.student_phone || '';
 
       await ensureSlotsForDate(db, date);
+
+      // If slot_ids is empty, automatically pick the first open available slot
+      if (slot_ids.length === 0) {
+        const firstSlot = await db.prepare(`
+          SELECT id FROM student_slots WHERE slot_date = ? AND booked_count < max_capacity ORDER BY slot_index ASC LIMIT 1
+        `).bind(date).first();
+        if (firstSlot) {
+          slot_ids = [firstSlot.id];
+        } else {
+          return jsonRes({ success: false, error: 'All slots for this date are full. Please choose another date.' }, 400);
+        }
+      }
 
       // Verify each slot exists and has capacity
       const slotsDetails = [];
       for (const slotId of slot_ids) {
         const slotRow = await db.prepare(`
-          SELECT * FROM student_slots WHERE id = ? AND slot_date = ?
-        `).bind(slotId, date).first();
+          SELECT * FROM student_slots WHERE id = ?
+        `).bind(slotId).first();
 
         if (!slotRow) {
           return jsonRes({ success: false, error: `Invalid slot selected: ${slotId}` }, 400);
