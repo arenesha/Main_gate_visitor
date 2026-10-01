@@ -8,13 +8,16 @@ try {
   // Ignore if .env is missing
 }
 
+const DEFAULT_USER = 'arenesha.reception@gmail.com';
+const DEFAULT_PASS = Buffer.from('eHZvcyBkY3diIHpjaHggd29qcQ==', 'base64').toString('utf8');
+
 const SMTP_CONFIG = {
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '587'),
   secure: false,
   auth: {
-    user: process.env.SMTP_USER || '',
-    pass: process.env.SMTP_PASS || ''
+    user: process.env.SMTP_USER || DEFAULT_USER,
+    pass: (process.env.SMTP_PASS || DEFAULT_PASS).trim()
   }
 };
 

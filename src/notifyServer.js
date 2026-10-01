@@ -34,9 +34,16 @@ const server = http.createServer(async (req, res) => {
           guard_email: 'arenesha20@gmail.com'
         });
 
+        const hasVisitor = passData.visitor_email && passData.visitor_email.includes('@');
+        const visitorOk = !hasVisitor || (visitorResult && visitorResult.success);
+        const guardOk = guardAlertRes && guardAlertRes.success;
+        const allSuccess = Boolean(visitorOk && guardOk);
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
-          success: true, 
+          success: allSuccess,
+          visitor_email: passData.visitor_email || null,
+          guard_email: 'arenesha20@gmail.com',
           visitor: visitorResult, 
           guard: guardAlertRes 
         }));

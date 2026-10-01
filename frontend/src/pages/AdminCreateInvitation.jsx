@@ -224,10 +224,36 @@ export default function AdminCreateInvitation() {
             })
           });
           const emailData = await emailRes.json();
-          if (emailData.success) {
-            notifResults.email = { attempted: true, success: true, status: `Sent to ${emailData.recipient}` };
+          const visitorOk = emailData.visitor ? emailData.visitor.success : emailData.success;
+          const guardOk = emailData.guard ? emailData.guard.success : false;
+
+          if (visitorOk && guardOk) {
+            notifResults.email = {
+              attempted: true,
+              success: true,
+              status: `Sent to ${formData.visitor_email} & Guard`
+            };
+          } else if (visitorOk && !guardOk) {
+            notifResults.email = {
+              attempted: true,
+              success: true,
+              status: `Sent to ${formData.visitor_email} (Guard alert failed)`
+            };
+          } else if (!visitorOk && guardOk) {
+            notifResults.email = {
+              attempted: true,
+              success: false,
+              status: `Guard alerted, Visitor pass failed`
+            };
           } else {
-            notifResults.email = { attempted: true, success: false, status: emailData.error || 'Dispatch Failed' };
+            const rawErr = emailData.visitor?.error || emailData.guard?.error || emailData.error || '';
+            let friendlyErr = 'Dispatch Failed';
+            if (rawErr.includes('Application-specific password required') || rawErr.includes('InvalidSecondFactor')) {
+              friendlyErr = 'Failed: Google App Password required on server';
+            } else if (rawErr) {
+              friendlyErr = `Failed: ${rawErr.substring(0, 35)}...`;
+            }
+            notifResults.email = { attempted: true, success: false, status: friendlyErr };
           }
         } catch (err) {
           notifResults.email = { attempted: true, success: false, status: 'Email service unavailable' };
