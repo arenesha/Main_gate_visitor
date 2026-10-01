@@ -8,6 +8,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { RAZORPAY_PAYMENT_URL, RAZORPAY_BENEFICIARY_NAME, RAZORPAY_HANDLE, MERCHANT_UPI_ID } from '../utils/paymentConfig';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import LoginModal from '../components/LoginModal';
 
 const BASE_PRICE = 500;
 
@@ -18,6 +19,7 @@ export default function MeetRoboBooking() {
   const slotSectionRef = useRef(null);
 
   const isDirectBooking = location.pathname === '/booking' || location.search.includes('signup=true');
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   useEffect(() => {
     if (isDirectBooking && slotSectionRef.current) {
@@ -345,42 +347,91 @@ export default function MeetRoboBooking() {
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg, #111827 0%, #374151 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#B6FF1B', fontWeight: 900, fontSize: '1.2rem' }}>
-              A
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontWeight: 900, fontSize: '1.05rem', letterSpacing: '-0.02em', color: '#0F172A' }}>
-                  ARENESHA
-                </span>
-                <span style={{ fontSize: '0.72rem', background: '#111827', color: '#B6FF1B', padding: '2px 8px', borderRadius: '6px', fontWeight: 800 }}>
-                  SUMMIT 2026
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
+              <img 
+                src="https://arenesha.com/_next/image?url=%2Fassets%2Flogo-primary.png&w=384&q=75" 
+                onError={(e) => { e.currentTarget.src = "/arenesha-logo.png"; }}
+                alt="AreneSHA Logo" 
+                style={{ height: '34px', width: 'auto', objectFit: 'contain' }} 
+              />
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '0.72rem', background: '#111827', color: '#B6FF1B', padding: '2px 8px', borderRadius: '6px', fontWeight: 800 }}>
+                    SUMMIT 2026
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.76rem', color: '#64748B' }}>
+                  📍 Meenakshi Tech Park, Hyderabad
                 </span>
               </div>
-              <span style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                📍 Meenakshi Tech Park, Gachibowli, Hyderabad
-              </span>
-            </div>
+            </Link>
           </div>
 
-          {/* Right Action: Clean Logout button ONLY if user is logged in, NO login button on public UI */}
+          {/* Right Action: Admin Panel button (triggers login section modal when clicked) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {user && (
+            {user ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => navigate('/admin/dashboard')}
+                  style={{
+                    background: '#0F172A',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontSize: '0.84rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.15)'
+                  }}
+                >
+                  <ShieldCheck size={15} color="#B6FF1B" />
+                  <span>Admin Panel</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={logout}
+                  style={{
+                    background: '#F1F5F9',
+                    color: '#475569',
+                    border: '1px solid #CBD5E1',
+                    padding: '7px 12px',
+                    borderRadius: '8px',
+                    fontSize: '0.84rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
               <button
-                onClick={logout}
+                type="button"
+                onClick={() => setIsLoginModalOpen(true)}
                 style={{
-                  background: '#F1F5F9',
-                  color: '#475569',
-                  border: '1px solid #CBD5E1',
-                  padding: '7px 14px',
-                  borderRadius: '8px',
-                  fontSize: '0.84rem',
-                  fontWeight: 600,
-                  cursor: 'pointer'
+                  background: '#0F172A',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '10px',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  boxShadow: '0 2px 8px rgba(15, 23, 42, 0.15)',
+                  transition: 'all 0.2s'
                 }}
               >
-                Logout
+                <Lock size={14} color="#B6FF1B" />
+                <span>Admin Panel</span>
               </button>
             )}
           </div>
@@ -1025,7 +1076,12 @@ export default function MeetRoboBooking() {
         </div>
       )}
 
-
+      {/* 6. ADMIN & GUARD LOGIN MODAL */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        targetRoute="/admin/dashboard"
+      />
 
     </div>
   );
