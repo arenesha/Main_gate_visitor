@@ -439,16 +439,13 @@ export default function MeetRoboBooking() {
       {/* 3. WORKING SLOT BOOKING CODE (SHOWN ON /booking IN NEW TAB) */}
       {isDirectBooking && (
         <>
-          <div style={{ maxWidth: '1200px', margin: '20px auto 0', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ maxWidth: '1200px', margin: '24px auto 16px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Link 
               to="/" 
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#4F46E5', fontWeight: 700, fontSize: '0.88rem', textDecoration: 'none' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#4F46E5', fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none' }}
             >
               <span>← Back to AI Education Summit</span>
             </Link>
-            <span style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600 }}>
-              Official Robot Interaction Reservation
-            </span>
           </div>
 
           <section 
@@ -456,68 +453,11 @@ export default function MeetRoboBooking() {
             ref={slotSectionRef}
             style={{
               maxWidth: '1200px',
-              margin: '20px auto 48px',
+              margin: '0 auto 48px',
               padding: '0 16px',
               display: 'block'
             }}
           >
-        {/* Section Header */}
-        <div style={{
-          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
-          color: '#FFFFFF',
-          borderRadius: '20px',
-          padding: '24px 30px',
-          marginBottom: '26px',
-          boxShadow: '0 10px 30px rgba(15, 23, 42, 0.12)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '20px'
-        }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span style={{ background: '#B6FF1B', color: '#0F172A', padding: '3px 10px', borderRadius: '6px', fontSize: '0.74rem', fontWeight: 900 }}>
-                15-MIN WORKSHOP SLOTS
-              </span>
-              <span style={{ color: '#94A3B8', fontSize: '0.84rem' }}>
-                12:00 PM – 06:00 PM (24 Slots)
-              </span>
-            </div>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#FFFFFF', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
-              Select Your Robot Interaction Slot
-            </h2>
-            <p style={{ color: '#CBD5E1', fontSize: '0.9rem', margin: 0, maxWidth: '600px' }}>
-              Choose a dedicated 15-minute hands-on slot with the Humanoid Robot and generate your authorized Gate Pass.
-            </p>
-          </div>
-
-          {/* Pricing Highlight Card */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(182, 255, 27, 0.35)',
-            borderRadius: '16px',
-            padding: '16px 20px',
-            minWidth: '260px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <span style={{ fontSize: '0.72rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: 800 }}>Student Fee</span>
-              <span style={{ fontSize: '0.68rem', background: 'rgba(182, 255, 27, 0.2)', color: '#B6FF1B', padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }}>Per Slot</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '6px' }}>
-              <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#FFFFFF' }}>₹500</span>
-              <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>Base Fee</span>
-            </div>
-            <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '6px', fontSize: '0.78rem', display: 'flex', justifyContent: 'space-between', color: '#CBD5E1' }}>
-              <span>+ 18% GST (CGST+SGST):</span>
-              <strong style={{ color: '#FCD34D' }}>₹90.00</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', fontWeight: 800 }}>
-              <span style={{ color: '#38BDF8', fontSize: '0.82rem' }}>Total Payable:</span>
-              <span style={{ color: '#B6FF1B', fontSize: '1.15rem' }}>₹590.00</span>
-            </div>
-          </div>
-        </div>
 
         {/* Slot Grid + Form Layout */}
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1fr) 380px', gap: '24px', alignItems: 'start' }}>
